@@ -1,0 +1,45 @@
+services:
+  postgres:
+    container_name: goofychain-postgres
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-goofychain}
+      PG_DATA: /var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - goofychain-network
+    restart: unless-stopped
+
+  mailhog:
+    container_name: goofychain-mailhog
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025" # SMTP Server
+      - "8025:8025" # Interface Web
+    networks:
+      - goofychain-network
+    restart: unless-stopped
+
+  pgadmin:
+    container_name: goofychain-pgadmin
+    image: dpage/pgadmin4
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD:-admin}
+    ports:
+      - "5050:80"
+    networks:
+      - goofychain-network
+    restart: unless-stopped
+
+networks:
+  goofychain-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
