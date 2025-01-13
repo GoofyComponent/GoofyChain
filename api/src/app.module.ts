@@ -3,8 +3,10 @@ import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
-import { EtherscanModule } from './modules/etherscan/etherscan.module';
 import { databaseConfig } from './config/database.config';
+import { AuthModule } from './modules/auth/auth.module';
+import { UsersModule } from './modules/users/users.module';
+import { WalletModule } from './modules/wallet/wallet.module';
 
 @Module({
   imports: [
@@ -12,7 +14,9 @@ import { databaseConfig } from './config/database.config';
       isGlobal: true,
     }),
     TypeOrmModule.forRoot(databaseConfig),
-    EtherscanModule,
+    AuthModule,
+    UsersModule,
+    WalletModule,
   ],
   controllers: [AppController],
   providers: [AppService],
