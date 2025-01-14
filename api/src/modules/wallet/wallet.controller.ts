@@ -3,7 +3,7 @@ import { ApiOperation, ApiParam, ApiTags } from '@nestjs/swagger';
 import { WalletService } from './wallet.service';
 
 @ApiTags('wallet')
-@Controller('wallet')
+@Controller({ path: 'wallet', version: '1' })
 export class WalletController {
   constructor(private readonly walletService: WalletService) {}
 

@@ -6,6 +6,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { MailService } from '../mail/mail.service';
 import { UsersService } from '../users/users.service';
@@ -94,6 +95,72 @@ export class AuthService {
     });
   }
 
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      return; // Ne pas révéler si l'email existe ou non
+    }
+
+    const token = randomBytes(32).toString('hex');
+    const expires = new Date();
+    expires.setHours(expires.getHours() + 24); // Expire dans 24h
+
+    await this.usersService.update(user.id, {
+      resetPasswordToken: token,
+      resetPasswordTokenExpires: expires,
+    });
+
+    // TODO: Envoyer l'email avec le lien de réinitialisation
+    // await this.mailService.sendResetPasswordEmail(user.email, token);
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const user = await this.usersService.findByResetPasswordToken(token);
+    if (!user || user.resetPasswordTokenExpires < new Date()) {
+      throw new UnauthorizedException('Token invalide ou expiré');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.usersService.update(user.id, {
+      password: hashedPassword,
+      resetPasswordToken: null,
+      resetPasswordTokenExpires: null,
+    });
+  }
+
+  async verifyEmail(token: string) {
+    const user = await this.usersService.findByActivationToken(token);
+    if (!user || user.activationTokenExpires < new Date()) {
+      throw new UnauthorizedException('Token invalide ou expiré');
+    }
+
+    await this.usersService.update(user.id, {
+      isEmailVerified: true,
+      activationToken: null,
+      activationTokenExpires: null,
+    });
+  }
+
+  async activateAccount(token: string) {
+    const user = await this.usersService.findByActivationToken(token);
+
+    if (!user) {
+      throw new BadRequestException("Token d'activation invalide");
+    }
+
+    if (user.activationTokenExpires < new Date()) {
+      throw new BadRequestException("Le token d'activation a expiré");
+    }
+
+    await this.usersService.update(user.id, {
+      isEmailVerified: true,
+      activationToken: null,
+      activationTokenExpires: null,
+    });
+
+    return { message: 'Compte activé avec succès' };
+  }
+
   private async generateTokens(user: any) {
     const payload = { email: user.email, sub: user.id };
 
@@ -126,25 +193,5 @@ export class AuthService {
       refreshToken: hashedRefreshToken,
       refreshTokenExpires,
     });
-  }
-
-  async activateAccount(token: string) {
-    const user = await this.usersService.findByActivationToken(token);
-
-    if (!user) {
-      throw new BadRequestException("Token d'activation invalide");
-    }
-
-    if (user.activationTokenExpires < new Date()) {
-      throw new BadRequestException("Le token d'activation a expiré");
-    }
-
-    await this.usersService.update(user.id, {
-      isEmailVerified: true,
-      activationToken: null,
-      activationTokenExpires: null,
-    });
-
-    return { message: 'Compte activé avec succès' };
   }
 }
