@@ -6,10 +6,12 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { randomBytes } from 'crypto';
 import { v4 as uuidv4 } from 'uuid';
 import { MailService } from '../mail/mail.service';
 import { UsersService } from '../users/users.service';
 import { RegisterDto, TokenResponse } from './dto/auth.dto';
+import { AccountLockoutService } from './services/account-lockout.service';
 
 @Injectable()
 export class AuthService {
@@ -18,20 +20,41 @@ export class AuthService {
     private jwtService: JwtService,
     private mailService: MailService,
     private configService: ConfigService,
+    private accountLockoutService: AccountLockoutService,
   ) {}
 
-  async validateUser(email: string, password: string) {
+  async validateUser(email: string, password: string): Promise<any> {
+    // Vérifier si le compte est verrouillé
+    const isLocked = await this.accountLockoutService.isAccountLocked(email);
+    if (isLocked) {
+      throw new UnauthorizedException(
+        'Compte temporairement verrouillé. Veuillez réessayer plus tard.',
+      );
+    }
+
     const user = await this.usersService.findByEmail(email);
-    if (user && (await bcrypt.compare(password, user.password))) {
-      if (!user.isEmailVerified) {
+    if (!user) {
+      throw new UnauthorizedException('Email ou mot de passe incorrect');
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      // Enregistrer la tentative échouée
+      const isNowLocked =
+        await this.accountLockoutService.recordFailedAttempt(email);
+      if (isNowLocked) {
         throw new UnauthorizedException(
-          'Veuillez vérifier votre email avant de vous connecter',
+          'Compte temporairement verrouillé suite à trop de tentatives.',
         );
       }
-      const { password, ...result } = user;
-      return result;
+      throw new UnauthorizedException('Email ou mot de passe incorrect');
     }
-    return null;
+
+    // Réinitialiser les tentatives en cas de succès
+    await this.accountLockoutService.resetAttempts(email);
+
+    const { password: _, ...result } = user;
+    return result;
   }
 
   async register(registerDto: RegisterDto): Promise<TokenResponse> {
@@ -94,6 +117,72 @@ export class AuthService {
     });
   }
 
+  async forgotPassword(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      return; // Ne pas révéler si l'email existe ou non
+    }
+
+    const token = randomBytes(32).toString('hex');
+    const expires = new Date();
+    expires.setHours(expires.getHours() + 24); // Expire dans 24h
+
+    await this.usersService.update(user.id, {
+      resetPasswordToken: token,
+      resetPasswordTokenExpires: expires,
+    });
+
+    // TODO: Envoyer l'email avec le lien de réinitialisation
+    // await this.mailService.sendResetPasswordEmail(user.email, token);
+  }
+
+  async resetPassword(token: string, newPassword: string) {
+    const user = await this.usersService.findByResetPasswordToken(token);
+    if (!user || user.resetPasswordTokenExpires < new Date()) {
+      throw new UnauthorizedException('Token invalide ou expiré');
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    await this.usersService.update(user.id, {
+      password: hashedPassword,
+      resetPasswordToken: null,
+      resetPasswordTokenExpires: null,
+    });
+  }
+
+  async verifyEmail(token: string) {
+    const user = await this.usersService.findByActivationToken(token);
+    if (!user || user.activationTokenExpires < new Date()) {
+      throw new UnauthorizedException('Token invalide ou expiré');
+    }
+
+    await this.usersService.update(user.id, {
+      isEmailVerified: true,
+      activationToken: null,
+      activationTokenExpires: null,
+    });
+  }
+
+  async activateAccount(token: string) {
+    const user = await this.usersService.findByActivationToken(token);
+
+    if (!user) {
+      throw new BadRequestException("Token d'activation invalide");
+    }
+
+    if (user.activationTokenExpires < new Date()) {
+      throw new BadRequestException("Le token d'activation a expiré");
+    }
+
+    await this.usersService.update(user.id, {
+      isEmailVerified: true,
+      activationToken: null,
+      activationTokenExpires: null,
+    });
+
+    return { message: 'Compte activé avec succès' };
+  }
+
   private async generateTokens(user: any) {
     const payload = { email: user.email, sub: user.id };
 
@@ -126,25 +215,5 @@ export class AuthService {
       refreshToken: hashedRefreshToken,
       refreshTokenExpires,
     });
-  }
-
-  async activateAccount(token: string) {
-    const user = await this.usersService.findByActivationToken(token);
-
-    if (!user) {
-      throw new BadRequestException("Token d'activation invalide");
-    }
-
-    if (user.activationTokenExpires < new Date()) {
-      throw new BadRequestException("Le token d'activation a expiré");
-    }
-
-    await this.usersService.update(user.id, {
-      isEmailVerified: true,
-      activationToken: null,
-      activationTokenExpires: null,
-    });
-
-    return { message: 'Compte activé avec succès' };
   }
 }

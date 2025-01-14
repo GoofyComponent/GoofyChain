@@ -47,6 +47,9 @@ export class WalletTransaction {
   @Column()
   isIncoming: boolean;
 
+  @Column('decimal', { precision: 36, scale: 18 })
+  balance: number; // Solde du wallet après cette transaction
+
   @ManyToOne(() => WalletAnalysis, (analysis) => analysis.transactions)
   analysis: WalletAnalysis;
 

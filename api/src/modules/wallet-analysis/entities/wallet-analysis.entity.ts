@@ -45,6 +45,9 @@ export class WalletAnalysis {
   @Column()
   currency: string; // EUR/USD
 
+  @Column('int')
+  totalTransactions: number;
+
   @ManyToOne(() => User)
   user: User;
 
@@ -56,4 +59,7 @@ export class WalletAnalysis {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Column('decimal', { precision: 36, scale: 18 })
+  netBalance: number;
 }

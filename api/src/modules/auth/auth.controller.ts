@@ -8,13 +8,16 @@ import {
   Res,
   UseGuards,
 } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
 import { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto, TokenResponse } from './dto/auth.dto';
+import { ForgotPasswordDto, ResetPasswordDto } from './dto/password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
 
-@Controller('auth')
+@Controller({ path: 'auth', version: '1' })
+@ApiTags('Authentication')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
@@ -75,6 +78,45 @@ export class AuthController {
   @Get('profile')
   getProfile(@Req() req) {
     return req.user;
+  }
+
+  @Post('forgot-password')
+  @ApiOperation({ summary: 'Demander la réinitialisation du mot de passe' })
+  @ApiResponse({
+    status: 200,
+    description: 'Email de réinitialisation envoyé avec succès',
+  })
+  async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
+    await this.authService.forgotPassword(forgotPasswordDto.email);
+    return {
+      message:
+        'Si votre email existe, vous recevrez un lien de réinitialisation',
+    };
+  }
+
+  @Post('reset-password')
+  @ApiOperation({ summary: 'Réinitialiser le mot de passe' })
+  @ApiResponse({
+    status: 200,
+    description: 'Mot de passe réinitialisé avec succès',
+  })
+  async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
+    await this.authService.resetPassword(
+      resetPasswordDto.token,
+      resetPasswordDto.password,
+    );
+    return { message: 'Mot de passe réinitialisé avec succès' };
+  }
+
+  @Get('verify-email/:token')
+  @ApiOperation({ summary: "Vérifier l'email" })
+  @ApiResponse({
+    status: 200,
+    description: 'Email vérifié avec succès',
+  })
+  async verifyEmail(@Param('token') token: string) {
+    await this.authService.verifyEmail(token);
+    return { message: 'Email vérifié avec succès' };
   }
 
   private setRefreshTokenCookie(response: Response, refreshToken: string) {

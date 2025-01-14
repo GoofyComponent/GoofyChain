@@ -1,17 +1,21 @@
 import { Module } from '@nestjs/common';
+import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { WalletAnalysisController } from './wallet-analysis.controller';
-import { WalletAnalysisService } from './wallet-analysis.service';
+import { AuthModule } from '../auth/auth.module';
+import { CryptoPriceModule } from '../crypto-price/crypto-price.module';
 import { WalletAnalysis } from './entities/wallet-analysis.entity';
 import { WalletTransaction } from './entities/wallet-transaction.entity';
-import { ConfigModule } from '@nestjs/config';
+import { WalletAnalysisController } from './wallet-analysis.controller';
+import { WalletAnalysisService } from './wallet-analysis.service';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([WalletAnalysis, WalletTransaction]),
     ConfigModule,
+    TypeOrmModule.forFeature([WalletAnalysis, WalletTransaction]),
+    AuthModule,
+    CryptoPriceModule,
   ],
-  controllers: [WalletAnalysisController],
   providers: [WalletAnalysisService],
+  controllers: [WalletAnalysisController],
 })
 export class WalletAnalysisModule {}
