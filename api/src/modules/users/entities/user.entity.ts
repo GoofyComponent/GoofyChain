@@ -1,5 +1,11 @@
-import { Entity, Column, PrimaryGeneratedColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Exclude } from 'class-transformer';
+import {
+  Column,
+  CreateDateColumn,
+  Entity,
+  PrimaryGeneratedColumn,
+  UpdateDateColumn,
+} from 'typeorm';
 
 @Entity('users')
 export class User {
@@ -21,6 +27,19 @@ export class User {
 
   @Column({ default: false })
   isEmailVerified: boolean;
+
+  @Column({ nullable: true })
+  activationToken: string;
+
+  @Column({ nullable: true })
+  activationTokenExpires: Date;
+
+  @Column({ nullable: true })
+  @Exclude()
+  refreshToken: string;
+
+  @Column({ nullable: true })
+  refreshTokenExpires: Date;
 
   @CreateDateColumn()
   createdAt: Date;

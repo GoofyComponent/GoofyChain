@@ -27,4 +27,13 @@ export class UsersService {
   async findByEmail(email: string): Promise<User> {
     return this.usersRepository.findOne({ where: { email } });
   }
+
+  async findByActivationToken(token: string): Promise<User> {
+    return this.usersRepository.findOne({ where: { activationToken: token } });
+  }
+
+  async update(id: string, updateData: Partial<User>): Promise<User> {
+    await this.usersRepository.update(id, updateData);
+    return this.findOne(id);
+  }
 }

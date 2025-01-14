@@ -6,6 +6,7 @@ import { AppService } from './app.service';
 import { databaseConfig } from './config/database.config';
 import { AuthModule } from './modules/auth/auth.module';
 import { UsersModule } from './modules/users/users.module';
+import { WalletAnalysisModule } from './modules/wallet-analysis/wallet-analysis.module';
 import { WalletModule } from './modules/wallet/wallet.module';
 
 @Module({
@@ -17,6 +18,7 @@ import { WalletModule } from './modules/wallet/wallet.module';
     AuthModule,
     UsersModule,
     WalletModule,
+    WalletAnalysisModule,
   ],
   controllers: [AppController],
   providers: [AppService],
