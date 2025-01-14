@@ -25,6 +25,9 @@ export class User {
   @Column({ nullable: true })
   lastName: string;
 
+  @Column('simple-array', { nullable: true })
+  wallets: string[];
+
   @Column({ default: false })
   isEmailVerified: boolean;
 
@@ -40,6 +43,18 @@ export class User {
 
   @Column({ nullable: true })
   refreshTokenExpires: Date;
+
+  @Column({ nullable: true })
+  resetPasswordToken: string;
+
+  @Column({ nullable: true })
+  resetPasswordTokenExpires: Date;
+
+  @Column({ default: 0 })
+  loginAttempts: number;
+
+  @Column({ nullable: true })
+  lockedUntil: Date;
 
   @CreateDateColumn()
   createdAt: Date;
