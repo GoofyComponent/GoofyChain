@@ -1,0 +1,68 @@
+services:
+  postgres:
+    container_name: goofychain-postgres
+    image: postgres:15-alpine
+    environment:
+      POSTGRES_USER: ${DB_USERNAME:-postgres}
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-postgres}
+      POSTGRES_DB: ${DB_NAME:-goofychain}
+      PG_DATA: /var/lib/postgresql/data
+    ports:
+      - "${DB_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - goofychain-network
+    restart: unless-stopped
+
+  mailhog:
+    container_name: goofychain-mailhog
+    image: mailhog/mailhog
+    ports:
+      - "1025:1025" # SMTP Server
+      - "8025:8025" # Interface Web
+    networks:
+      - goofychain-network
+    restart: unless-stopped
+
+  nestjs:
+    container_name: goofychain-api
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    ports:
+      - "${API_PORT:-3000}:3000"
+    environment:
+      - DB_HOST=${DB_HOST:-postgres}
+      - DB_PORT=${DB_PORT:-5432}
+      - DB_USERNAME=${DB_USERNAME:-postgres}
+      - DB_PASSWORD=${DB_PASSWORD:-postgres}
+      - DB_NAME=${DB_NAME:-goofychain}
+      - MAIL_HOST=${MAIL_HOST:-mailhog}
+      - MAIL_PORT=${MAIL_PORT:-1025}
+      - MAIL_USER=${MAIL_USER:-null}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-null}
+      - MAIL_FROM=${MAIL_FROM:-noreply@goofychain.com}
+      - JWT_SECRET=${JWT_SECRET:-votre_secret_jwt_super_securise}
+      - ETHERSCAN_API_KEY=${ETHERSCAN_API_KEY}
+    networks:
+      - goofychain-network
+
+  reactjs:
+    container_name: goofychain-web
+    build:
+      context: ./client-web
+      dockerfile: Dockerfile
+    ports:
+      - "${WEB_PORT:-3001}:80"
+    environment:
+      - REACT_APP_API_BASE_URL=${REACT_APP_API_BASE_URL:-http://nestjs:3000}
+    networks:
+      - goofychain-network
+
+networks:
+  goofychain-network:
+    driver: bridge
+
+volumes:
+  postgres_data:
