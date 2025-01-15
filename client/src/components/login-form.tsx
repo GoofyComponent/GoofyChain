@@ -40,7 +40,7 @@ export function LoginForm({
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const registerApi = await fetch(`${API_URL}/api/auth/login`, {
+    const registerApi = await fetch(`${API_URL}/api/v1/auth/login`, {
       method: "POST",
       body: JSON.stringify({
         email: values.email,
