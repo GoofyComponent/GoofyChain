@@ -71,10 +71,10 @@ npm run start:dev
 
 ### Frontend (client-main)
 
-1. Naviguez vers le dossier client-main :
+1. Naviguez vers le dossier client :
 
 ```bash
-cd client-main
+cd client
 ```
 
 2. Installez les dépendances :
@@ -162,7 +162,7 @@ npm run test:e2e    # Tests end-to-end
 ### Frontend
 
 ```bash
-cd client-main
+cd client
 npm run test
 ```
 
