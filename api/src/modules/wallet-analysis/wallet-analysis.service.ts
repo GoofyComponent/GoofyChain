@@ -30,40 +30,169 @@ export class WalletAnalysisService {
   ) {
     this.etherscanApiKey = this.configService.get('ETHERSCAN_API_KEY');
   }
-  // TODO recuperr les transaction internes aussi
-  private async getTransactionList(
+
+  private async getInternalTransactions(
     address: string,
     startBlock = 0,
     endBlock = 99999999,
   ): Promise<any[]> {
-    try {
-      const response = await axios.get(this.etherscanApiUrl, {
-        params: {
-          chainId: '1',
-          module: 'account',
-          action: 'txlist',
-          address,
-          startblock: startBlock,
-          endblock: endBlock,
-          sort: 'asc',
-          apikey: this.etherscanApiKey,
-        },
-      });
+    console.log(`Récupération des transactions internes pour ${address}`);
 
-      if (response.data.status === '1' && response.data.message === 'OK') {
-        console.log(response.data.result);
-        return response.data.result;
+    let allInternalTxs: any[] = [];
+    let currentStartBlock = startBlock;
+    let hasMoreTransactions = true;
+
+    while (hasMoreTransactions) {
+      try {
+        const response = await axios.get('https://api.etherscan.io/api', {
+          params: {
+            module: 'account',
+            action: 'txlistinternal',
+            address,
+            startblock: currentStartBlock,
+            endblock: endBlock,
+            offset: 10000,
+            sort: 'asc',
+            apikey: this.etherscanApiKey,
+          },
+        });
+
+        if (response.data.status === '1' && response.data.result.length > 0) {
+          const transactions = response.data.result;
+          allInternalTxs = [...allInternalTxs, ...transactions];
+
+          if (transactions.length === 10000) {
+            currentStartBlock =
+              parseInt(transactions[transactions.length - 1].blockNumber) + 1;
+          } else {
+            hasMoreTransactions = false;
+          }
+        } else {
+          hasMoreTransactions = false;
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 200)); // Respect des limites de l'API
+      } catch (error) {
+        console.error(
+          'Erreur lors de la récupération des transactions internes:',
+          error,
+        );
+        throw error;
       }
-
-      console.error('Etherscan API error:', response.data);
-      return [];
-    } catch (error) {
-      console.error('Error fetching transactions:', error);
-      return [];
     }
+
+    return allInternalTxs;
   }
 
-  async analyzeWallet(walletAddress: string): Promise<any> {
+  private async getNormalTransactions(
+    address: string,
+    startBlock = 0,
+    endBlock = 99999999,
+  ): Promise<any[]> {
+    console.error(
+      `\x1b[31mDébut de la récupération des transactions pour ${address}\x1b[0m`,
+    );
+    console.error(
+      `\x1b[31mBlock de départ: ${startBlock}, Block de fin: ${endBlock}\x1b[0m`,
+    );
+
+    let allTransactions: any[] = [];
+    let currentStartBlock = startBlock;
+    let hasMoreTransactions = true;
+    let batchNumber = 1;
+
+    while (hasMoreTransactions) {
+      try {
+        console.log(
+          `\nRécupération du lot #${batchNumber} depuis le block ${currentStartBlock}`,
+        );
+
+        const response = await axios.get(this.etherscanApiUrl, {
+          params: {
+            module: 'account',
+            action: 'txlist',
+            address,
+            startblock: currentStartBlock,
+            endblock: endBlock,
+            offset: 10000,
+            sort: 'asc',
+            apikey: this.etherscanApiKey,
+            chainId: '1',
+          },
+        });
+
+        if (response.data.status === '1' && response.data.result.length > 0) {
+          const transactions = response.data.result;
+          allTransactions = [...allTransactions, ...transactions];
+
+          console.log(
+            `${transactions.length} nouvelles transactions récupérées`,
+          );
+          console.log(`Total actuel: ${allTransactions.length} transactions`);
+
+          if (transactions.length === 10000) {
+            currentStartBlock =
+              parseInt(transactions[transactions.length - 1].blockNumber) + 1;
+            console.log(`Passage au block suivant: ${currentStartBlock}`);
+            batchNumber++;
+          } else {
+            console.log('Plus de transactions à récupérer');
+            hasMoreTransactions = false;
+          }
+        } else {
+          console.log('Aucune transaction trouvée dans ce lot');
+          hasMoreTransactions = false;
+        }
+
+        console.log('Pause de 200ms...');
+        await new Promise((resolve) => setTimeout(resolve, 200));
+      } catch (error) {
+        console.error(
+          'Erreur lors de la récupération des transactions:',
+          error,
+        );
+        throw error;
+      }
+    }
+
+    console.log(
+      `\nRécupération terminée! Total: ${allTransactions.length} transactions`,
+    );
+    return allTransactions;
+  }
+
+  private async getTransactionList(
+    address: string,
+    startBlock = 0,
+    endBlock = 99999999,
+  ) {
+    console.log(`Récupération de toutes les transactions pour ${address}`);
+
+    // Récupérer les transactions normales et internes en parallèle
+    const [normalTxs, internalTxs] = await Promise.all([
+      this.getNormalTransactions(address, startBlock, endBlock),
+      this.getInternalTransactions(address, startBlock, endBlock),
+    ]);
+
+    // Fusionner et trier toutes les transactions par bloc et index
+    const allTransactions = [...normalTxs, ...internalTxs].sort((a, b) => {
+      const blockDiff = parseInt(a.blockNumber) - parseInt(b.blockNumber);
+      if (blockDiff !== 0) return blockDiff;
+      // Pour les transactions dans le même bloc, utiliser l'index de transaction
+      return (
+        parseInt(a.transactionIndex || '0') -
+        parseInt(b.transactionIndex || '0')
+      );
+    });
+
+    return allTransactions;
+  }
+
+  async analyzeWallet(
+    walletAddress: string,
+    currency: string = 'EUR',
+  ): Promise<any> {
+    console.error(`\x1b[31mAnalyse du portefeuille ${walletAddress}\x1b[0m`);
     // Vérifier si une analyse existe déjà pour cette période
     const existingAnalysis = await this.walletAnalysisRepository.findOne({
       where: {
@@ -77,33 +206,51 @@ export class WalletAnalysisService {
     // }
 
     // Récupérer l'historique des transactions via l'API Etherscan
+    console.log('Récupération des transactions...');
     const transactions = await this.getTransactionList(walletAddress);
+    console.log(`${transactions.length} transactions récupérées`);
 
-    // Calculer les totaux et le solde pour chaque transaction
     let currentBalance = 0;
     const totals = await transactions.reduce(
       async (acc, tx) => {
-        const value = parseFloat(ethers.formatEther(tx.value));
-        const gasUsed = parseFloat(ethers.formatEther(tx.gasUsed));
-        const gasPrice = parseFloat(ethers.formatUnits(tx.gasPrice, 'gwei'));
-        const gasCost = gasUsed * gasPrice;
-        const isIncoming = tx.to.toLowerCase() === walletAddress.toLowerCase();
-        const netValue = isIncoming ? value : -(value + gasCost);
+        try {
+          // Gérer le cas où value est null (certaines transactions internes)
+          const value = tx.value ? parseFloat(ethers.formatEther(tx.value)) : 0;
+          const gasUsed = tx.gasUsed
+            ? parseFloat(ethers.formatEther(tx.gasUsed))
+            : 0;
+          const gasPrice = tx.gasPrice
+            ? parseFloat(ethers.formatEther(tx.gasPrice))
+            : 0;
+          const gasCost = gasUsed * gasPrice;
 
-        // Mettre à jour le solde courant
-        currentBalance += netValue;
-        tx.balance = currentBalance;
+          // Pour les transactions internes, vérifier si c'est un transfert vers le wallet
+          const isIncoming =
+            tx.to && tx.to.toLowerCase() === walletAddress.toLowerCase();
+          const netValue = isIncoming ? value : -(value + gasCost);
 
-        if (isIncoming) {
-          (await acc).totalIncoming += value;
-        } else {
-          (await acc).totalOutgoing += value;
+          // Sauvegarder la balance précédente avant la mise à jour
+          tx.previousBalance = currentBalance;
+
+          // Mettre à jour le solde courant
+          currentBalance += netValue;
+          tx.balance = currentBalance;
+
+          if (isIncoming) {
+            (await acc).totalIncoming += value;
+          } else {
+            (await acc).totalOutgoing += value;
+          }
+
+          (await acc).totalGasFees += gasCost;
+          (await acc).totalTransactions += 1;
+
+          return acc;
+        } catch (error) {
+          console.error('Erreur lors du traitement de la transaction:', tx);
+          console.error('Erreur:', error);
+          return acc;
         }
-
-        (await acc).totalGasFees += gasCost;
-        (await acc).totalTransactions += 1;
-
-        return acc;
       },
       Promise.resolve({
         totalIncoming: 0,
@@ -124,12 +271,10 @@ export class WalletAnalysisService {
         totals.totalIncoming - totals.totalOutgoing - totals.totalGasFees,
     });
 
-    // console.log(analysis);
-
-    // Sauvegarder l'analyse
     const savedAnalysis = await this.walletAnalysisRepository.save(analysis);
 
     // Sauvegarder les transactions avec leur solde
+    console.log('Sauvegarde des transactions...');
     await Promise.all(
       transactions.map(async (tx) => {
         // Vérifier si la transaction existe déjà
@@ -144,37 +289,43 @@ export class WalletAnalysisService {
           transaction = this.walletTransactionRepository.create();
         }
 
+        // Récupérer le prix de l'ETH au moment de la transaction
+        const timestamp = parseInt(tx.timeStamp);
+        const ethPrice = await this.cryptoPriceService.getHistoricalPrice(
+          timestamp,
+          currency,
+        );
+
         transaction.hash = tx.hash;
         transaction.walletAddress = walletAddress.toLowerCase();
-        transaction.value = parseFloat(ethers.formatEther(tx.value));
-        transaction.gasUsed = parseFloat(ethers.formatEther(tx.gasUsed));
-        transaction.gasPrice = parseFloat(ethers.formatEther(tx.gasPrice));
-        transaction.netValue = parseFloat(ethers.formatEther(tx.value));
-        transaction.ethPrice = 2;
-        transaction.fiatValue = parseFloat(ethers.formatEther(tx.value)) * 2;
-        transaction.timestamp = new Date(parseInt(tx.timeStamp) * 1000);
-        transaction.isIncoming =
-          tx.to.toLowerCase() === walletAddress.toLowerCase();
+
+        // Gérer les valeurs nulles pour les transactions internes
+        transaction.value = tx.value
+          ? parseFloat(ethers.formatEther(tx.value))
+          : 0;
+        transaction.gasUsed = tx.gasUsed
+          ? parseFloat(ethers.formatEther(tx.gasUsed))
+          : 0;
+        transaction.gasPrice = tx.gasPrice
+          ? parseFloat(ethers.formatEther(tx.gasPrice))
+          : 0;
+
+        const gasCost = transaction.gasUsed * transaction.gasPrice;
+        const isIncoming =
+          tx.to && tx.to.toLowerCase() === walletAddress.toLowerCase();
+        transaction.netValue = isIncoming
+          ? transaction.value
+          : -(transaction.value + gasCost);
+        transaction.ethPrice = ethPrice;
+        transaction.timestamp = new Date(timestamp * 1000);
+        transaction.isIncoming = isIncoming;
         transaction.analysis = savedAnalysis;
         transaction.balance = tx.balance;
+        transaction.previousBalance = tx.previousBalance;
 
         return this.walletTransactionRepository.save(transaction);
       }),
     );
-
-    // return {
-    //   walletAddress,
-    //   startDate,
-    //   endDate,
-    //   currency,
-    //   initialBalance: 0,
-    //   totalTransactions: totals.totalTransactions,
-    //   totalIncoming: totals.totalIncoming,
-    //   totalOutgoing: totals.totalOutgoing,
-    //   totalGasFees: totals.totalGasFees,
-    //   netBalance:
-    //     totals.totalIncoming - totals.totalOutgoing - totals.totalGasFees,
-    // };
 
     return this.walletAnalysisRepository.findOne({
       where: { id: savedAnalysis.id },
@@ -182,92 +333,8 @@ export class WalletAnalysisService {
     });
   }
 
-  private async getEthPrice(
-    timestamp: number,
-    currency: string,
-  ): Promise<number> {
-    try {
-      const date = new Date(timestamp * 1000).toISOString().split('T')[0];
-      const response = await axios.get(
-        `https://api.coingecko.com/api/v3/coins/ethereum/history?date=${date}`,
-      );
-      return response.data.market_data.current_price[currency.toLowerCase()];
-    } catch (error) {
-      console.error('Erreur lors de la récupération du prix ETH:', error);
-      return 0;
-    }
-  }
-
-  private async getBalanceAtDate(address: string, date: Date): Promise<number> {
-    try {
-      const blockNumber = await this.getBlockNumberByTimestamp(
-        date.getTime() / 1000,
-      );
-      const balance = await this.getBalance(address, blockNumber);
-      return parseFloat(ethers.formatEther(balance));
-    } catch (error) {
-      console.error('Erreur lors de la récupération du solde:', error);
-      return 0;
-    }
-  }
-
-  private async getBlockNumberByTimestamp(timestamp: number): Promise<number> {
-    try {
-      const response = await axios.get(this.etherscanApiUrl, {
-        params: {
-          module: 'block',
-          action: 'getblocknobytime',
-          timestamp,
-          closest: 'before',
-          apikey: this.etherscanApiKey,
-        },
-      });
-
-      if (response.data.status === '1' && response.data.message === 'OK') {
-        return parseInt(response.data.result);
-      }
-
-      console.error('Etherscan API error:', response.data);
-      return 0;
-    } catch (error) {
-      console.error('Error fetching block number:', error);
-      return 0;
-    }
-  }
-
-  private async getBalance(
-    address: string,
-    blockNumber: number,
-  ): Promise<string> {
-    try {
-      const response = await axios.get(this.etherscanApiUrl, {
-        params: {
-          module: 'account',
-          action: 'balance',
-          address,
-          blockno: blockNumber,
-          tag: 'latest',
-          apikey: this.etherscanApiKey,
-        },
-      });
-
-      if (response.data.status === '1' && response.data.message === 'OK') {
-        return response.data.result;
-      }
-
-      console.error('Etherscan API error:', response.data);
-      return '0';
-    } catch (error) {
-      console.error('Error fetching balance:', error);
-      return '0';
-    }
-  }
-
   async getAnalysisByDateRange(
     walletAddress: string,
-    startDate: Date,
-    endDate: Date,
-    currency = 'EUR',
   ): Promise<WalletAnalysis | null> {
     return this.walletAnalysisRepository.findOne({
       where: {
@@ -302,16 +369,13 @@ export class WalletAnalysisService {
     currency: string,
   ): Promise<PortfolioDataPoint[]> {
     const dataPoints: PortfolioDataPoint[] = [];
-    let balance = 0;
 
     for (const tx of transactions) {
-      balance += tx.isIncoming ? tx.value : -tx.value;
-
       dataPoints.push({
         timestamp: tx.timestamp,
-        value: tx.fiatValue,
+        ethBalance: tx.balance,
+        fiatBalance: tx.balance * tx.ethPrice,
         ethPrice: tx.ethPrice,
-        netValue: balance * tx.ethPrice,
       });
     }
 
@@ -320,7 +384,6 @@ export class WalletAnalysisService {
 
   async getPortfolioStats(
     transactions: WalletTransaction[],
-    currency: string,
   ): Promise<PortfolioStats> {
     if (!transactions.length) {
       return {

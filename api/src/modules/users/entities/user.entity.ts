@@ -3,9 +3,11 @@ import {
   Column,
   CreateDateColumn,
   Entity,
+  OneToMany,
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { RefreshToken } from '../../auth/entities/refresh-token.entity';
 
 @Entity('users')
 export class User {
@@ -38,13 +40,6 @@ export class User {
   activationTokenExpires: Date;
 
   @Column({ nullable: true })
-  @Exclude()
-  refreshToken: string;
-
-  @Column({ nullable: true })
-  refreshTokenExpires: Date;
-
-  @Column({ nullable: true })
   resetPasswordToken: string;
 
   @Column({ nullable: true })
@@ -61,6 +56,9 @@ export class User {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @OneToMany(() => RefreshToken, (refreshToken) => refreshToken.user)
+  refreshTokens: RefreshToken[];
 
   constructor(partial: Partial<User>) {
     Object.assign(this, partial);

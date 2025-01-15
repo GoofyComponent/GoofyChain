@@ -1,8 +1,8 @@
 export interface PortfolioDataPoint {
   timestamp: Date;
-  value: number;
-  ethPrice: number;
-  netValue: number;
+  ethBalance: number; // Solde en ETH
+  fiatBalance: number; // Solde converti en devise (EUR/USD)
+  ethPrice: number; // Prix de l'ETH au moment donné
 }
 
 export interface PortfolioStats {
