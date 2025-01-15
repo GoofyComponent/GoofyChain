@@ -64,7 +64,7 @@ export function SignupForm({
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const registerApi = await fetch(`${API_URL}/api/auth/register`, {
+    const registerApi = await fetch(`${API_URL}/api/v1/auth/register`, {
       method: "POST",
       body: JSON.stringify({
         email: values.email,
