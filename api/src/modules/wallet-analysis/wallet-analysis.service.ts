@@ -71,7 +71,7 @@ export class WalletAnalysisService {
           hasMoreTransactions = false;
         }
 
-        await new Promise((resolve) => setTimeout(resolve, 200)); // Respect des limites de l'API
+        await new Promise((resolve) => setTimeout(resolve, 200));
       } catch (error) {
         console.error(
           'Erreur lors de la récupération des transactions internes:',

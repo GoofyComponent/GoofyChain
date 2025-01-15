@@ -25,7 +25,6 @@ export class AuthService {
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
-    // Vérifier si le compte est verrouillé
     const isLocked = await this.accountLockoutService.isAccountLocked(email);
     if (isLocked) {
       throw new UnauthorizedException(
@@ -40,7 +39,6 @@ export class AuthService {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      // Enregistrer la tentative échouée
       const isNowLocked =
         await this.accountLockoutService.recordFailedAttempt(email);
       if (isNowLocked) {
@@ -51,7 +49,6 @@ export class AuthService {
       throw new UnauthorizedException('Email ou mot de passe incorrect');
     }
 
-    // Réinitialiser les tentatives en cas de succès
     await this.accountLockoutService.resetAttempts(email);
 
     const { password: _, ...result } = user;
@@ -61,16 +58,13 @@ export class AuthService {
   async register(registerDto: RegisterDto) {
     const { email, password } = registerDto;
 
-    // Vérifier si l'utilisateur existe déjà
     const existingUser = await this.usersService.findByEmail(email);
     if (existingUser) {
       throw new BadRequestException('Cet email est déjà utilisé');
     }
 
-    // Hasher le mot de passe
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Générer le token d'activation
     const activationToken = randomBytes(32).toString('hex');
     const activationTokenExpires = new Date();
     activationTokenExpires.setHours(activationTokenExpires.getHours() + 24);
@@ -83,7 +77,6 @@ export class AuthService {
       isEmailVerified: false,
     });
 
-    // Envoyer l'email d'activation
     await this.mailService.sendActivationEmail(email, activationToken);
 
     return {
@@ -107,26 +100,27 @@ export class AuthService {
   async forgotPassword(email: string) {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      return; // Ne pas révéler si l'email existe ou non
+      return;
     }
 
     const token = randomBytes(32).toString('hex');
     const expires = new Date();
-    expires.setHours(expires.getHours() + 24); // Expire dans 24h
+    expires.setHours(expires.getHours() + 24);
 
     await this.usersService.update(user.id, {
       resetPasswordToken: token,
       resetPasswordTokenExpires: expires,
     });
 
-    // TODO: Envoyer l'email avec le lien de réinitialisation
-    // await this.mailService.sendResetPasswordEmail(user.email, token);
+    await this.mailService.sendResetPasswordEmail(user.email, token);
   }
 
   async resetPassword(token: string, newPassword: string) {
     const user = await this.usersService.findByResetPasswordToken(token);
     if (!user || user.resetPasswordTokenExpires < new Date()) {
-      throw new UnauthorizedException('Token invalide ou expiré');
+      throw new UnauthorizedException(
+        'Le token est invalide ou a expiré. Veuillez réessayer.',
+      );
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -168,6 +162,36 @@ export class AuthService {
     });
 
     return { message: 'Compte activé avec succès' };
+  }
+
+  async resendActivationEmail(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      return {
+        message:
+          "Si votre compte existe, un nouvel email d'activation vous sera envoyé.",
+      };
+    }
+
+    if (user.isEmailVerified) {
+      throw new BadRequestException('Votre compte est déjà activé.');
+    }
+
+    const activationToken = randomBytes(32).toString('hex');
+    const activationTokenExpires = new Date();
+    activationTokenExpires.setHours(activationTokenExpires.getHours() + 24);
+
+    await this.usersService.update(user.id, {
+      activationToken,
+      activationTokenExpires,
+    });
+
+    await this.mailService.sendActivationEmail(email, activationToken);
+
+    return {
+      message:
+        "Si votre compte existe, un nouvel email d'activation vous sera envoyé.",
+    };
   }
 
   async generateAccessToken(user: any): Promise<string> {

@@ -84,4 +84,52 @@ export class MailService {
       throw new Error("Impossible d'envoyer l'email d'activation");
     }
   }
+
+  async sendResetPasswordEmail(to: string, token: string) {
+    const appUrl = this.configService.get('APP_URL');
+    if (!appUrl) {
+      throw new Error("APP_URL non définie dans les variables d'environnement");
+    }
+
+    const baseUrl = appUrl.endsWith('/') ? appUrl.slice(0, -1) : appUrl;
+    const resetPasswordLink = `${baseUrl}/auth/reset-password/${token}`;
+
+    const mailOptions = {
+      from:
+        this.configService.get('MAIL_FROM') ||
+        '"GoofyChain" <no-reply@goofychain.com>',
+      to: to,
+      subject: 'Réinitialisation de votre mot de passe GoofyChain',
+      html: `
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <style>
+              body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+              .container { max-width: 600px; margin: 0 auto; padding: 20px; }
+              .button { 
+                display: inline-block;
+                padding: 10px 20px;
+                background-color: #4CAF50;
+                color: white;
+                text-decoration: none;
+                border-radius: 5px;
+              }
+            </style>
+          </head>
+          <body>
+            <div class="container">
+              <h2>Réinitialisation de votre mot de passe</h2>
+              <p>Vous avez demandé la réinitialisation de votre mot de passe. Cliquez sur le lien ci-dessous pour créer un nouveau mot de passe :</p>
+              <p><a href="${resetPasswordLink}" class="button">Réinitialiser mon mot de passe</a></p>
+              <p>Si vous n'avez pas demandé cette réinitialisation, vous pouvez ignorer cet email.</p>
+              <p>Ce lien expirera dans 24 heures.</p>
+            </div>
+          </body>
+        </html>
+      `,
+    };
+
+    await this.transporter.sendMail(mailOptions);
+  }
 }

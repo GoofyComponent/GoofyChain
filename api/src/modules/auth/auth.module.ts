@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { JwtModule } from '@nestjs/jwt';
 import { PassportModule } from '@nestjs/passport';
+import { ThrottlerModule } from '@nestjs/throttler';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MailModule } from '../mail/mail.module';
 import { User } from '../users/entities/user.entity';
@@ -20,12 +21,12 @@ import { LocalStrategy } from './strategies/local.strategy';
     PassportModule,
     MailModule,
     TypeOrmModule.forFeature([User, RefreshToken]),
-    // ThrottlerModule.forRoot([
-    //   {
-    //     ttl: 60,
-    //     limit: 5,
-    //   },
-    // ]),
+    ThrottlerModule.forRoot([
+      {
+        ttl: 60,
+        limit: 5,
+      },
+    ]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({

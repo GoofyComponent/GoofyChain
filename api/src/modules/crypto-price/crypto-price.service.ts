@@ -9,13 +9,26 @@ export class CryptoPriceService {
   private readonly requestQueue: Map<string, Promise<number>> = new Map();
   private readonly secondWindow: number[] = [];
   private readonly minuteWindow: number[] = [];
-  private readonly maxRequestsPerSecond = 15;
-  private readonly maxRequestsPerMinute = 250;
   private readonly baseRetryDelay = 2000;
   private retryMultiplier = 1;
+  private maxRequestsPerSecond: number;
+  private maxRequestsPerMinute: number;
+  private readonly baseUrl = 'https://min-api.cryptocompare.com/data';
 
   constructor(private configService: ConfigService) {
     this.cryptocompareApiKey = this.configService.get('CRYPTOCOMPARE_API_KEY');
+
+    if (!this.cryptocompareApiKey) {
+      this.maxRequestsPerSecond = 5; // Limites plus restrictives en mode non authentifié
+      this.maxRequestsPerMinute = 50;
+      console.log(
+        'CryptoCompare API: Mode non authentifié (limites restreintes)',
+      );
+    } else {
+      this.maxRequestsPerSecond = 15;
+      this.maxRequestsPerMinute = 250;
+      console.log('CryptoCompare API: Mode authentifié (limites étendues)');
+    }
   }
 
   private async delay(ms: number): Promise<void> {
@@ -78,6 +91,13 @@ export class CryptoPriceService {
     return `${date.getTime() / 1000}_${date.getTimezoneOffset()}`;
   }
 
+  private getUrl(endpoint: string): string {
+    const baseUrl = `${this.baseUrl}${endpoint}`;
+    return this.cryptocompareApiKey
+      ? `${baseUrl}${baseUrl.includes('?') ? '&' : '?'}api_key=${this.cryptocompareApiKey}`
+      : baseUrl;
+  }
+
   async getHistoricalPrice(
     timestamp: number,
     currency: string = 'EUR',
@@ -115,18 +135,14 @@ export class CryptoPriceService {
             new Date(date.setHours(0, 0, 0, 0)).getTime() / 1000,
           );
 
-          const response = await axios.get(
-            'https://min-api.cryptocompare.com/data/v2/histoday',
-            {
-              params: {
-                fsym: 'ETH',
-                tsym: currency,
-                limit: 1,
-                toTs: dayTimestamp,
-                api_key: this.cryptocompareApiKey,
-              },
+          const response = await axios.get(this.getUrl('/v2/histoday'), {
+            params: {
+              fsym: 'ETH',
+              tsym: currency,
+              limit: 1,
+              toTs: dayTimestamp,
             },
-          );
+          });
 
           if (response.data.Response === 'Error') {
             if (response.data.Message.includes('rate limit')) {

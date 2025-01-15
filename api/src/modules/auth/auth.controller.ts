@@ -42,17 +42,14 @@ export class AuthController {
   @Post('login')
   async login(@Req() req, @Res({ passthrough: true }) response: Response) {
     console.log(req.user);
-    // Générer l'access token et obtenir les infos utilisateur
     const result = await this.authService.login(req.user);
 
-    // Créer un nouveau refresh token
     const refreshToken = await this.refreshTokenService.createRefreshToken(
       req.user,
       req.headers['user-agent'],
       req.ip,
     );
 
-    // Définir le cookie refresh token
     this.setRefreshTokenCookie(response, refreshToken.token);
 
     // Retourner l'access token et les infos utilisateur
@@ -67,30 +64,24 @@ export class AuthController {
   ) {
     const tokenFromCookie = req.cookies['refresh_token'];
 
-    // Vérifier si le token est valide
     const isValid =
       await this.refreshTokenService.isTokenValid(tokenFromCookie);
     if (!isValid) {
       throw new UnauthorizedException('Invalid refresh token');
     }
 
-    // Révoquer l'ancien token
     await this.refreshTokenService.revokeToken(tokenFromCookie);
 
-    // Créer un nouveau refresh token et access token
     const refreshToken = await this.refreshTokenService.createRefreshToken(
       req.user,
       req.headers['user-agent'],
       req.ip,
     );
 
-    // Générer un nouveau access token
     const accessToken = await this.authService.generateAccessToken(req.user);
 
-    // Définir le nouveau refresh token dans le cookie
     this.setRefreshTokenCookie(response, refreshToken.token);
 
-    // Retourner le nouveau access token
     return {
       accessToken,
       user: req.user,
@@ -190,6 +181,16 @@ export class AuthController {
   async verifyEmail(@Param('token') token: string) {
     await this.authService.verifyEmail(token);
     return { message: 'Email vérifié avec succès' };
+  }
+
+  @Post('resend-activation')
+  @ApiOperation({ summary: "Renvoyer l'email d'activation" })
+  @ApiResponse({
+    status: 200,
+    description: "Email d'activation renvoyé avec succès",
+  })
+  async resendActivationEmail(@Body('email') email: string) {
+    return this.authService.resendActivationEmail(email);
   }
 
   private setRefreshTokenCookie(response: Response, token: string) {

@@ -50,8 +50,8 @@ export class WalletService {
     startBlock = 0,
     endBlock = 99999999,
   ): Promise<any[]> {
-    console.log(`Début de la récupération des transactions pour ${address}`);
-    console.log(`Block de départ: ${startBlock}, Block de fin: ${endBlock}`);
+    // console.log(`Début de la récupération des transactions pour ${address}`);
+    // console.log(`Block de départ: ${startBlock}, Block de fin: ${endBlock}`);
 
     let allTransactions: any[] = [];
     let currentStartBlock = startBlock;
@@ -60,9 +60,9 @@ export class WalletService {
 
     while (hasMoreTransactions) {
       try {
-        console.log(
-          `\nRécupération du lot #${batchNumber} depuis le block ${currentStartBlock}`,
-        );
+        // console.log(
+        // `\nRécupération du lot #${batchNumber} depuis le block ${currentStartBlock}`,
+        // );
 
         const response = await axios.get(this.etherscanApiUrl, {
           params: {
@@ -82,26 +82,26 @@ export class WalletService {
           const transactions = response.data.result;
           allTransactions = [...allTransactions, ...transactions];
 
-          console.log(
-            `${transactions.length} nouvelles transactions récupérées`,
-          );
-          console.log(`Total actuel: ${allTransactions.length} transactions`);
+          // console.log(
+          // `${transactions.length} nouvelles transactions récupérées`,
+          // );
+          // console.log(`Total actuel: ${allTransactions.length} transactions`);
 
           if (transactions.length === 10000) {
             currentStartBlock =
               parseInt(transactions[transactions.length - 1].blockNumber) + 1;
-            console.log(`Passage au block suivant: ${currentStartBlock}`);
+            // console.log(`Passage au block suivant: ${currentStartBlock}`);
             batchNumber++;
           } else {
-            console.log('Plus de transactions à récupérer');
+            // console.log('Plus de transactions à récupérer');
             hasMoreTransactions = false;
           }
         } else {
-          console.log('Aucune transaction trouvée dans ce lot');
+          // console.log('Aucune transaction trouvée dans ce lot');
           hasMoreTransactions = false;
         }
 
-        console.log('Pause de 200ms...');
+        // console.log('Pause de 200ms...');
         await new Promise((resolve) => setTimeout(resolve, 200));
       } catch (error) {
         console.error(
@@ -112,9 +112,9 @@ export class WalletService {
       }
     }
 
-    console.log(
-      `\nRécupération terminée! Total: ${allTransactions.length} transactions`,
-    );
+    // console.log(
+    // `\nRécupération terminée! Total: ${allTransactions.length} transactions`,
+    // );
     return allTransactions;
   }
 }
