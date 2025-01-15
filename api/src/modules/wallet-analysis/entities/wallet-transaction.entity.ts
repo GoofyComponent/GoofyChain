@@ -39,13 +39,13 @@ export class WalletTransaction {
   fiatValue: number; // Valeur en devise (EUR/USD)
 
   @Column()
-  currency: string; // EUR/USD
-
-  @Column()
   timestamp: Date;
 
   @Column()
   isIncoming: boolean;
+
+  @Column('decimal', { precision: 36, scale: 18 })
+  balance: number; // Solde du wallet après cette transaction
 
   @ManyToOne(() => WalletAnalysis, (analysis) => analysis.transactions)
   analysis: WalletAnalysis;

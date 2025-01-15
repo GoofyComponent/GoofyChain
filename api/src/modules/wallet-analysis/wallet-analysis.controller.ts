@@ -1,46 +1,120 @@
-import { Body, Controller, Get, Param, Post, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query, Version } from '@nestjs/common';
+import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import { ParseDatePipe } from '../../common/pipes/parse-date.pipe';
+import {
+  PortfolioDataPoint,
+  PortfolioStats,
+  TransactionPoint,
+} from '../crypto-price/types/portfolio.types';
 import { WalletAnalysisService } from './wallet-analysis.service';
 
-@Controller('wallet-analysis')
-// @UseGuards(JwtAuthGuard)
+@Controller({
+  path: 'wallet-analysis',
+  version: '1',
+})
+@ApiTags('Analyse de Wallet')
 export class WalletAnalysisController {
   constructor(private readonly walletAnalysisService: WalletAnalysisService) {}
 
   @Post('analyze')
+  @Version('1')
+  @ApiOperation({ summary: 'Analyser un wallet Ethereum' })
+  @ApiResponse({
+    status: 201,
+    description: 'Analyse du wallet effectuée avec succès',
+  })
   async analyzeWallet(
-    @Body()
-    data: {
-      walletAddress: string;
-      startDate: string;
-      endDate: string;
-      currency?: string;
-    },
-  ) {
-    return this.walletAnalysisService.analyzeWallet(
-      data.walletAddress,
-      new Date(data.startDate),
-      new Date(data.endDate),
-      data.currency,
+    @Body('walletAddress') walletAddress: string,
+  ): Promise<any> {
+    return this.walletAnalysisService.analyzeWallet(walletAddress);
+  }
+
+  @Get('analysis')
+  @Version('1')
+  @ApiOperation({ summary: 'Récupérer une analyse par plage de dates' })
+  @ApiResponse({
+    status: 200,
+    description: 'Analyse trouvée avec succès',
+  })
+  async getAnalysisByDateRange(
+    @Query('walletAddress') walletAddress: string,
+    @Query('startDate', ParseDatePipe) startDate: Date,
+    @Query('endDate', ParseDatePipe) endDate: Date,
+    @Query('currency') currency: string = 'EUR',
+  ): Promise<any> {
+    return this.walletAnalysisService.getAnalysisByDateRange(
+      walletAddress,
+      startDate,
+      endDate,
+      currency,
     );
   }
 
-  @Get(':id/points')
-  async getAnalysisPoints(@Param('id') id: string) {
-    return this.walletAnalysisService.getTransactionPoints(id);
+  @Get('transactions')
+  @Version('1')
+  @ApiOperation({ summary: 'Récupérer les points de transaction' })
+  @ApiResponse({
+    status: 200,
+    description: 'Points de transaction récupérés avec succès',
+  })
+  async getTransactionPoints(
+    @Query('analysisId') analysisId: string,
+  ): Promise<TransactionPoint[]> {
+    return this.walletAnalysisService.getTransactionPoints(analysisId);
   }
 
-  @Get('history')
-  async getWalletHistory(
-    @Query('address') address: string,
-    @Query('startDate') startDate: string,
-    @Query('endDate') endDate: string,
-    @Query('currency') currency?: string,
-  ) {
-    return this.walletAnalysisService.getAnalysisByDateRange(
-      address,
-      new Date(startDate),
-      new Date(endDate),
+  @Get('portfolio-history')
+  @ApiOperation({ summary: "Obtenir l'historique de la valeur du portfolio" })
+  @ApiResponse({
+    status: 200,
+    description: 'Historique récupéré avec succès',
+  })
+  async getPortfolioHistory(
+    @Query('walletAddress') walletAddress: string,
+    @Query('startDate', ParseDatePipe) startDate: Date,
+    @Query('endDate', ParseDatePipe) endDate: Date,
+    @Query('currency') currency: string = 'EUR',
+  ): Promise<PortfolioDataPoint[]> {
+    const analysis =
+      await this.walletAnalysisService.analyzeWallet(walletAddress);
+
+    return this.walletAnalysisService.getPortfolioHistory(
+      analysis.transactions,
       currency,
+    );
+  }
+
+  @Get('portfolio-stats')
+  @ApiOperation({ summary: 'Obtenir les statistiques du portfolio' })
+  @ApiResponse({
+    status: 200,
+    description: 'Statistiques récupérées avec succès',
+  })
+  async getPortfolioStats(
+    @Query('walletAddress') walletAddress: string,
+    @Query('currency') currency: string = 'EUR',
+  ): Promise<PortfolioStats> {
+    const analysis =
+      await this.walletAnalysisService.analyzeWallet(walletAddress);
+    return this.walletAnalysisService.getPortfolioStats(
+      analysis.transactions,
+      currency,
+    );
+  }
+
+  @Get('transactions-summary')
+  @ApiOperation({ summary: 'Obtenir un résumé des transactions' })
+  @ApiResponse({
+    status: 200,
+    description: 'Résumé récupéré avec succès',
+  })
+  async getTransactionsSummary(
+    @Query('walletAddress') walletAddress: string,
+  ): Promise<any> {
+    const analysis =
+      await this.walletAnalysisService.analyzeWallet(walletAddress);
+    return this.walletAnalysisService.getTransactionsSummary(
+      analysis.transactions,
     );
   }
 }

@@ -28,8 +28,14 @@ export class UsersService {
     return this.usersRepository.findOne({ where: { email } });
   }
 
-  async findByActivationToken(token: string): Promise<User> {
+  async findByActivationToken(token: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { activationToken: token } });
+  }
+
+  async findByResetPasswordToken(token: string): Promise<User | null> {
+    return this.usersRepository.findOne({
+      where: { resetPasswordToken: token },
+    });
   }
 
   async update(id: string, updateData: Partial<User>): Promise<User> {

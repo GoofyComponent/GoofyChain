@@ -18,18 +18,6 @@ export class WalletAnalysis {
   @Column()
   walletAddress: string;
 
-  @Column()
-  startDate: Date;
-
-  @Column()
-  endDate: Date;
-
-  @Column('decimal', { precision: 36, scale: 18 })
-  initialBalance: number;
-
-  @Column('decimal', { precision: 36, scale: 18 })
-  finalBalance: number;
-
   @Column('decimal', { precision: 36, scale: 18 })
   totalGasFees: number;
 
@@ -39,11 +27,8 @@ export class WalletAnalysis {
   @Column('decimal', { precision: 36, scale: 18 })
   totalOutgoing: number;
 
-  @Column('decimal', { precision: 36, scale: 18 })
-  netProfit: number;
-
-  @Column()
-  currency: string; // EUR/USD
+  @Column('int')
+  totalTransactions: number;
 
   @ManyToOne(() => User)
   user: User;
@@ -56,4 +41,7 @@ export class WalletAnalysis {
 
   @UpdateDateColumn()
   updatedAt: Date;
+
+  @Column('decimal', { precision: 36, scale: 18 })
+  netBalance: number;
 }
