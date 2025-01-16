@@ -70,7 +70,7 @@ export const Index = () => {
         >
           GoofyChain
         </HyperText>
-        <MorphingText className="text-3xl" texts={texts} />
+        <MorphingText className="text-3xl select-none" texts={texts} />
         <p className="text-lg text-center max-w-2xl select-none">
           Welcome to GoofyChain, and join the best platform to view transactions
           and Ethereum prices.
