@@ -23,10 +23,9 @@ import logo from "@/assets/img/logo.png";
 const API_URL = import.meta.env.VITE_API_URL;
 const formSchema = z.object({
   email: z.string().email(),
-  password: z.string(),
 });
 
-export function LoginForm({
+export function ForgotPasswordForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
@@ -36,17 +35,15 @@ export function LoginForm({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "abc@abc.com",
-      password: "g!oeasz6D#kPkzjK",
+      email: "",
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const registerApi = await fetch(`${API_URL}/auth/login`, {
+    const registerApi = await fetch(`${API_URL}/auth/forgot-password`, {
       method: "POST",
       body: JSON.stringify({
         email: values.email,
-        password: values.password,
       }),
       headers: {
         "Content-Type": "application/json",
@@ -60,7 +57,7 @@ export function LoginForm({
       }
 
       for (const message of error.message) {
-        const triggers = ["email", "password", "firstName", "lastName"];
+        const triggers = ["email"];
 
         for (const trigger of triggers) {
           if (message.includes(trigger)) {
@@ -78,10 +75,8 @@ export function LoginForm({
       const jwt = response.accessToken;
 
       await login(user, jwt);
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
       return navigate({
-        to: "/dashboard",
+        to: "/forgot-password-confirmation",
       });
     }
   };
@@ -112,9 +107,8 @@ export function LoginForm({
               </HyperText>
 
               <div className="text-center text-sm">
-                Don&apos;t have an account?{" "}
-                <Link to="/register" className="underline underline-offset-4">
-                  Sign up
+                <Link to="/login" className="underline underline-offset-4">
+                  Back to login
                 </Link>
               </div>
             </div>
@@ -132,27 +126,6 @@ export function LoginForm({
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="password"
-                render={({ field }) => (
-                  <FormItem className="grid gap-2">
-                    <div className="flex justify-between items-center">
-                      <FormLabel>Password</FormLabel>
-                      <Link
-                        to="/forgot-password"
-                        className="text-sm underline underline-offset-4"
-                      >
-                        Forgot password?
-                      </Link>
-                    </div>
-                    <FormControl>
-                      <Input type="password" {...field} required />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               <Button
                 type="submit"
                 className="w-full"
@@ -163,7 +136,7 @@ export function LoginForm({
                     <LoaderCircle className="animate-spin" />
                   </div>
                 ) : (
-                  "Login"
+                  "Reset password"
                 )}
               </Button>
             </div>

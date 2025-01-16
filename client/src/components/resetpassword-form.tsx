@@ -21,31 +21,49 @@ import HyperText from "./ui/hyper-text";
 import logo from "@/assets/img/logo.png";
 
 const API_URL = import.meta.env.VITE_API_URL;
-const formSchema = z.object({
-  email: z.string().email(),
-  password: z.string(),
-});
+const formSchema = z
+  .object({
+    password: z.string().min(8, "Password must be at least 8 characters long"),
+    confirmPassword: z.string().min(8, ""),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 
-export function LoginForm({
+interface ResetPasswordFormProps {
+  token: string;
+}
+
+export function ResetPasswordForm({
   className,
+  token,
   ...props
-}: React.ComponentPropsWithoutRef<"div">) {
+}: React.ComponentPropsWithoutRef<"div"> & ResetPasswordFormProps) {
   const navigate = useNavigate();
   const { login } = useAuth();
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "abc@abc.com",
-      password: "g!oeasz6D#kPkzjK",
+      password: "",
+      confirmPassword: "",
     },
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const registerApi = await fetch(`${API_URL}/auth/login`, {
+    if (!token) {
+      form.setError("password", {
+        type: "server",
+        message: "Invalid or missing token",
+      });
+      return;
+    }
+
+    const resetPasswordApi = await fetch(`${API_URL}/auth/reset-password`, {
       method: "POST",
       body: JSON.stringify({
-        email: values.email,
+        token,
         password: values.password,
       }),
       headers: {
@@ -53,14 +71,14 @@ export function LoginForm({
       },
     });
 
-    if (!registerApi.ok) {
-      const error = await registerApi.json();
+    if (!resetPasswordApi.ok) {
+      const error = await resetPasswordApi.json();
       if (!Array.isArray(error.message)) {
         error.message = [error.message];
       }
 
       for (const message of error.message) {
-        const triggers = ["email", "password", "firstName", "lastName"];
+        const triggers = ["password", "confirmPassword"];
 
         for (const trigger of triggers) {
           if (message.includes(trigger)) {
@@ -72,16 +90,14 @@ export function LoginForm({
         }
       }
     } else {
-      const response = await registerApi.json();
+      const response = await resetPasswordApi.json();
 
       const user = response.user;
       const jwt = response.accessToken;
 
       await login(user, jwt);
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
       return navigate({
-        to: "/dashboard",
+        to: "/login",
       });
     }
   };
@@ -101,32 +117,30 @@ export function LoginForm({
                 </div>
                 <span className="sr-only">GoofyChain</span>
               </Link>
-              <p className="text-xl font-bold">
-                Welcome <span className="italic">BACK</span> to
-              </p>
               <HyperText
                 className="text-5xl font-bold select-none"
                 animateOnHover={false}
               >
                 GoofyChain
               </HyperText>
-
-              <div className="text-center text-sm">
-                Don&apos;t have an account?{" "}
-                <Link to="/register" className="underline underline-offset-4">
-                  Sign up
-                </Link>
-              </div>
             </div>
             <div className="flex flex-col gap-6">
+              <p className="text-center text-sm">
+                Enter your new password to reset your password
+              </p>
               <FormField
                 control={form.control}
-                name="email"
+                name="password"
                 render={({ field }) => (
                   <FormItem className="grid gap-2">
-                    <FormLabel>Email</FormLabel>
+                    <FormLabel>Password</FormLabel>
                     <FormControl>
-                      <Input placeholder="m@example.com" {...field} required />
+                      <Input
+                        type="password"
+                        placeholder="New password"
+                        {...field}
+                        required
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -134,20 +148,17 @@ export function LoginForm({
               />
               <FormField
                 control={form.control}
-                name="password"
+                name="confirmPassword"
                 render={({ field }) => (
                   <FormItem className="grid gap-2">
-                    <div className="flex justify-between items-center">
-                      <FormLabel>Password</FormLabel>
-                      <Link
-                        to="/forgot-password"
-                        className="text-sm underline underline-offset-4"
-                      >
-                        Forgot password?
-                      </Link>
-                    </div>
+                    <FormLabel>Confirm Password</FormLabel>
                     <FormControl>
-                      <Input type="password" {...field} required />
+                      <Input
+                        type="password"
+                        placeholder="Confirm new password"
+                        {...field}
+                        required
+                      />
                     </FormControl>
                     <FormMessage />
                   </FormItem>
@@ -163,7 +174,7 @@ export function LoginForm({
                     <LoaderCircle className="animate-spin" />
                   </div>
                 ) : (
-                  "Login"
+                  "Reset password"
                 )}
               </Button>
             </div>
