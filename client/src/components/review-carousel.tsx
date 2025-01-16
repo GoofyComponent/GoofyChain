@@ -6,7 +6,7 @@ const reviews = [
   {
     name: "Adrien Albuquerque",
     username: "@ADR1811",
-    body: "This is shit.",
+    body: "Shit, this is.",
     img: "https://avatars.githubusercontent.com/u/29776857",
     url: "https://github.com/ADR1811",
   },
