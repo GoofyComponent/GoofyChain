@@ -24,6 +24,7 @@ function getStoredJwt() {
   return localStorage.getItem(USER_JWT);
 }
 
+
 function setStoredUser(user: User | null) {
   if (user) {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
@@ -31,6 +32,14 @@ function setStoredUser(user: User | null) {
     localStorage.removeItem(USER_KEY);
   }
 }
+
+function updateStoredUser(user: Partial<User>) {
+  const storedUser = getStoredUser();
+
+  if (storedUser) {
+    setStoredUser({ ...storedUser, ...user });
+  }
+} 
 
 function setStoredJwt(jwt: string | null) {
   if (jwt) {
@@ -45,6 +54,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [accessToken, setAccessToken] = React.useState<string | null>(
     getStoredJwt()
   );
+
   const isAuthenticated = !!user;
 
   const logout = React.useCallback(async () => {
@@ -61,13 +71,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setAccessToken(jwt);
   }, []);
 
+  const update = React.useCallback(async (user: Partial<User>) => {
+    updateStoredUser(user);
+  }, []);
+
   React.useEffect(() => {
     setUser(getStoredUser());
   }, []);
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, user, accessToken, login, logout }}
+      value={{ isAuthenticated, user, accessToken, login, logout, update }}
     >
       {children}
     </AuthContext.Provider>

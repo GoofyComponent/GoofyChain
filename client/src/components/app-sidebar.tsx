@@ -10,7 +10,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarRail,
 } from "@/components/ui/sidebar";
 import { NavUser } from "./nav-user";
 import { User } from "@/hooks/hooksTypes";
@@ -35,11 +34,7 @@ const navBar: NavBarItem[] = [
         title: "Overview",
         url: "#",
         isActive: true,
-      },
-      {
-        title: "Analytics",
-        url: "#",
-      },
+      }
     ],
   },
 ];
@@ -73,7 +68,6 @@ export function AppSidebar({
           </SidebarGroup>
         ))}
       </SidebarContent>
-      <SidebarRail />
     </Sidebar>
   );
 }
