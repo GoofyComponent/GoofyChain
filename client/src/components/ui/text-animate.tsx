@@ -144,7 +144,7 @@ const defaultItemAnimationVariants: Record<
     container: defaultContainerVariants,
     item: {
       hidden: { opacity: 0, filter: "blur(10px)", y: 20 },
-      show: (delay: number) => ({
+      show: () => ({
         opacity: 1,
         filter: "blur(0px)",
         y: 0,
@@ -170,7 +170,7 @@ const defaultItemAnimationVariants: Record<
     container: defaultContainerVariants,
     item: {
       hidden: { opacity: 0, filter: "blur(10px)", y: -20 },
-      show: (delay: number) => ({
+      show: () => ({
         opacity: 1,
         filter: "blur(0px)",
         y: 0,
@@ -374,7 +374,7 @@ export function TextAnimate({
             custom={i * staggerTimings[by]}
             className={cn(
               by === "line" ? "block" : "inline-block whitespace-pre",
-              segmentClassName,
+              segmentClassName
             )}
           >
             {segment}
