@@ -128,14 +128,14 @@ export class AuthController {
       await this.authService.activateAccount(token);
 
       const frontendUrl =
-        this.configService.get('FRONTEND_URL') || 'http://localhost:3000';
+        this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
 
-      response.redirect(`${frontendUrl}/auth/activation-success`);
+      response.redirect(`${frontendUrl}/login`);
     } catch (error) {
       const frontendUrl =
-        this.configService.get('FRONTEND_URL') || 'http://localhost:3000';
+        this.configService.get('FRONTEND_URL') || 'http://localhost:5173';
       response.redirect(
-        `${frontendUrl}/auth/activation-error?message=${encodeURIComponent(error.message)}`,
+        `${frontendUrl}/?message=${encodeURIComponent(error.message)}`,
       );
     }
   }

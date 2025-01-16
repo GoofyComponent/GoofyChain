@@ -26,7 +26,7 @@ export class MailService {
 
     // Construire l'URL d'activation en s'assurant qu'il n'y a pas de double slash
     const baseUrl = appUrl.endsWith('/') ? appUrl.slice(0, -1) : appUrl;
-    const activationLink = `${baseUrl}/auth/activate/${token}`;
+    const activationLink = `${baseUrl}/api/v1/auth/activate/${token}`;
 
     const mailOptions = {
       from:
@@ -92,7 +92,7 @@ export class MailService {
     }
 
     const baseUrl = appUrl.endsWith('/') ? appUrl.slice(0, -1) : appUrl;
-    const resetPasswordLink = `${baseUrl}/auth/reset-password/${token}`;
+    const resetPasswordLink = `${baseUrl}/api/v1/auth/reset-password/${token}`;
 
     const mailOptions = {
       from:
