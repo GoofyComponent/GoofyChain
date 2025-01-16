@@ -211,12 +211,16 @@ export function SignupForm({
 
               <Button
                 type="submit"
-                className={clsx("w-full", {
-                  "animate-spin": form.formState.isSubmitting,
-                })}
+                className="w-full"
                 disabled={form.formState.isSubmitting}
               >
-                {form.formState.isSubmitting ? <LoaderCircle /> : "Register"}
+                {form.formState.isSubmitting ? (
+                  <div className="flex justify-center items-center">
+                    <LoaderCircle className="animate-spin" />
+                  </div>
+                ) : (
+                  "Sign up"
+                )}
               </Button>
             </div>
           </div>
