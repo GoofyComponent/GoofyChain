@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
+import * as bcrypt from 'bcrypt';
 
 @Injectable()
 export class ProfileService {
@@ -94,6 +95,59 @@ export class ProfileService {
       wallets: user.wallets || [],
       createdAt: user.createdAt,
       updatedAt: user.updatedAt,
+    };
+  }
+
+  async updatePrefProfileData(userId: string, data: Partial<User>) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Utilisateur non trouvé');
+    }
+
+    //Find the previous initialWalletId inside wallets and delete it
+    const wallets = user.wallets || [];
+    const previousInitialWalletId = user.initialWalletId;
+    const toDeleteIndex = wallets.indexOf(previousInitialWalletId);
+    if (toDeleteIndex > -1) {
+      wallets.splice(toDeleteIndex, 1);
+    }
+    wallets.push(data.initialWalletId);
+    data.wallets = wallets;
+
+    await this.userRepository.update(userId, data);
+
+    return {
+      message: 'Donnees du profil mises a jour avec succes',
+      ...data,
+    };
+  }
+
+  async updateProfilePassword(userId: string, data: any) {
+    const user = await this.userRepository.findOne({
+      where: { id: userId },
+    });
+
+    if (!user) {
+      throw new NotFoundException('Utilisateur non trouve');
+    }
+
+    const hashedPassword = await bcrypt.hash(data.newPassword, 10);
+
+    const isPasswordValid = await bcrypt.compare(data.password, user.password);
+
+    if (!isPasswordValid) {
+      throw new Error('Mot de passe incorrect');
+    }
+
+    await this.userRepository.update(userId, {
+      password: hashedPassword,
+    });
+
+    return {
+      message: 'Mot de passe mis a jour avec succes',
     };
   }
 }

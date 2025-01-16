@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import { NavUser } from "./nav-user";
 import { User } from "@/hooks/hooksTypes";
-import { Link } from "@tanstack/react-router";
+import { Link, useLocation } from "@tanstack/react-router";
 
 export type NavBarItem = {
   title: string;
@@ -25,25 +25,17 @@ export type NavBarItem = {
   }[];
 };
 
-const navBar: NavBarItem[] = [
-  {
-    title: "Dashboard",
-    url: "/_authenticated/dashboard",
-    items: [
-      {
-        title: "Overview",
-        url: "#",
-        isActive: true,
-      }
-    ],
-  },
-];
-
 export function AppSidebar({
   user,
+  navBar,
   logout,
   ...props
-}: { user: User; logout: () => void } & React.ComponentProps<typeof Sidebar>) {
+}: {
+  user: User;
+  navBar: NavBarItem[];
+  logout: () => void;
+} & React.ComponentProps<typeof Sidebar>) {
+  const location = useLocation();
   return (
     <Sidebar {...props}>
       <SidebarHeader>
@@ -59,7 +51,15 @@ export function AppSidebar({
                 {item.items.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={item.isActive}>
-                      <Link to={item.url}>{item.title}</Link>
+                      <Link
+                        to={item.url}
+                        className="text-white hover:cursor-pointer disabled:cursor-not-allowed"
+                        disabled={
+                          item.isActive || location.pathname.includes("onboard")
+                        }
+                      >
+                        {item.title}
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}

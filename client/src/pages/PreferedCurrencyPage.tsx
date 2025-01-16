@@ -27,7 +27,8 @@ import { supportedCurrenciesEnum } from "@/lib/types";
 import { cn } from "@/lib/utils";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useLocation, useNavigate } from "@tanstack/react-router";
-import { PartyPopper } from "lucide-react";
+import { LoaderCircle, PartyPopper } from "lucide-react";
+import { Helmet } from "react-helmet";
 import { useForm } from "react-hook-form";
 import { z } from "zod";
 
@@ -45,7 +46,7 @@ export const PreferedCurrencyPage = () => {
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      currency: "usd",
+      currency: "eur",
     },
   });
 
@@ -87,15 +88,34 @@ export const PreferedCurrencyPage = () => {
       return;
     }
 
-    await update({preferedCurrency: values.currency, initialWalletId: location?.state?.onboardings?.walletKey, isOnboarded: true});
+    await update({
+      preferedCurrency: values.currency,
+      initialWalletId: location?.state?.onboardings?.walletKey,
+      isOnboarded: true,
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 300));
 
     navigate({
-      to: "/dashboard",
+      to: "/dashboard/summary",
     });
   };
 
   return (
-    <div className="flex min-h-svh w-full items-center justify-center p-6 md:p-10">
+    <div className="flex min-h-[calc(90svh-4rem)] w-full items-center justify-center">
+      <Helmet>
+        <meta charSet="utf-8" />
+        <title>GoofyChain - Onboarding - Prefered Currency</title>
+        <meta
+          name="description"
+          content="GoofyChain is the best platform to view transactions and Ethereum prices."
+        />
+        <meta
+          name="keywords"
+          content="GoofyChain, Ethereum, Transactions, Prices"
+        />
+        <link rel="icon" type="image/svgxml" href="/logo.png" />
+      </Helmet>
       <div className="w-full max-w-sm">
         <div className={cn("flex flex-col gap-6")}>
           <Card>
@@ -143,9 +163,17 @@ export const PreferedCurrencyPage = () => {
                         </FormItem>
                       )}
                     />
-                    <ShinyButton type="submit">
+                    <ShinyButton
+                      type="submit"
+                      disabled={form.formState.isSubmitting}
+                    >
                       <span className="flex items-center justify-center gap-2">
-                        To the dashboard <PartyPopper />
+                        {form.formState.isSubmitting ? (
+                          <LoaderCircle className="animate-spin" />
+                        ) : (
+                          "To the dashboard"
+                        )}{" "}
+                        <PartyPopper />
                       </span>
                     </ShinyButton>
                   </div>

@@ -1,5 +1,5 @@
-import { Outlet, useNavigate } from "@tanstack/react-router";
-import { AppSidebar } from "@/components/app-sidebar";
+import { Outlet, useLocation, useNavigate } from "@tanstack/react-router";
+import { AppSidebar, NavBarItem } from "@/components/app-sidebar";
 
 import { Separator } from "@/components/ui/separator";
 import {
@@ -12,11 +12,31 @@ import { Helmet } from "react-helmet";
 
 export const DashboardLayout = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user, logout } = useAuth();
 
   if (!user) {
     return null;
   }
+
+  const navBar: NavBarItem[] = [
+    {
+      title: "Dashboard",
+      url: "/_authenticated",
+      items: [
+        {
+          title: "Overview",
+          url: "/dashboard/summary",
+          isActive: location.pathname === "/dashboard/summary",
+        },
+        {
+          title: "Settings",
+          url: "/dashboard/settings",
+          isActive: location.pathname === "/dashboard/settings",
+        },
+      ],
+    },
+  ];
 
   return (
     <SidebarProvider>
@@ -31,10 +51,11 @@ export const DashboardLayout = () => {
           name="keywords"
           content="GoofyChain, Ethereum, Transactions, Prices"
         />
-        <link rel="icon" type="image/svg+xml" href="/logo.png" />
+        <link rel="icon" type="image/svgxml" href="/logo.png" />
       </Helmet>
       <AppSidebar
         user={user}
+        navBar={navBar}
         logout={async () => {
           await logout();
           navigate({

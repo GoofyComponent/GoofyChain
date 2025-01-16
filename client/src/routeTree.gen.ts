@@ -15,9 +15,12 @@ import { Route as RegisterImport } from './routes/register'
 import { Route as LoginImport } from './routes/login'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
+import { Route as CallbackUserErrorImport } from './routes/callback/userError'
 import { Route as AuthenticatedDashboardImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedOnboardWalletKeyImport } from './routes/_authenticated/onboard/wallet-key'
 import { Route as AuthenticatedOnboardCurrencyImport } from './routes/_authenticated/onboard/currency'
+import { Route as AuthenticatedDashboardSummaryImport } from './routes/_authenticated/dashboard/summary'
+import { Route as AuthenticatedDashboardSettingsImport } from './routes/_authenticated/dashboard/settings'
 
 // Create/Update Routes
 
@@ -44,6 +47,12 @@ const IndexRoute = IndexImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const CallbackUserErrorRoute = CallbackUserErrorImport.update({
+  id: '/callback/userError',
+  path: '/callback/userError',
+  getParentRoute: () => rootRoute,
+} as any)
+
 const AuthenticatedDashboardRoute = AuthenticatedDashboardImport.update({
   id: '/dashboard',
   path: '/dashboard',
@@ -62,6 +71,20 @@ const AuthenticatedOnboardCurrencyRoute =
     id: '/onboard/currency',
     path: '/onboard/currency',
     getParentRoute: () => AuthenticatedRoute,
+  } as any)
+
+const AuthenticatedDashboardSummaryRoute =
+  AuthenticatedDashboardSummaryImport.update({
+    id: '/summary',
+    path: '/summary',
+    getParentRoute: () => AuthenticatedDashboardRoute,
+  } as any)
+
+const AuthenticatedDashboardSettingsRoute =
+  AuthenticatedDashboardSettingsImport.update({
+    id: '/settings',
+    path: '/settings',
+    getParentRoute: () => AuthenticatedDashboardRoute,
   } as any)
 
 // Populate the FileRoutesByPath interface
@@ -103,6 +126,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/callback/userError': {
+      id: '/callback/userError'
+      path: '/callback/userError'
+      fullPath: '/callback/userError'
+      preLoaderRoute: typeof CallbackUserErrorImport
+      parentRoute: typeof rootRoute
+    }
+    '/_authenticated/dashboard/settings': {
+      id: '/_authenticated/dashboard/settings'
+      path: '/settings'
+      fullPath: '/dashboard/settings'
+      preLoaderRoute: typeof AuthenticatedDashboardSettingsImport
+      parentRoute: typeof AuthenticatedDashboardImport
+    }
+    '/_authenticated/dashboard/summary': {
+      id: '/_authenticated/dashboard/summary'
+      path: '/summary'
+      fullPath: '/dashboard/summary'
+      preLoaderRoute: typeof AuthenticatedDashboardSummaryImport
+      parentRoute: typeof AuthenticatedDashboardImport
+    }
     '/_authenticated/onboard/currency': {
       id: '/_authenticated/onboard/currency'
       path: '/onboard/currency'
@@ -122,14 +166,30 @@ declare module '@tanstack/react-router' {
 
 // Create and export the route tree
 
+interface AuthenticatedDashboardRouteChildren {
+  AuthenticatedDashboardSettingsRoute: typeof AuthenticatedDashboardSettingsRoute
+  AuthenticatedDashboardSummaryRoute: typeof AuthenticatedDashboardSummaryRoute
+}
+
+const AuthenticatedDashboardRouteChildren: AuthenticatedDashboardRouteChildren =
+  {
+    AuthenticatedDashboardSettingsRoute: AuthenticatedDashboardSettingsRoute,
+    AuthenticatedDashboardSummaryRoute: AuthenticatedDashboardSummaryRoute,
+  }
+
+const AuthenticatedDashboardRouteWithChildren =
+  AuthenticatedDashboardRoute._addFileChildren(
+    AuthenticatedDashboardRouteChildren,
+  )
+
 interface AuthenticatedRouteChildren {
-  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRouteWithChildren
   AuthenticatedOnboardCurrencyRoute: typeof AuthenticatedOnboardCurrencyRoute
   AuthenticatedOnboardWalletKeyRoute: typeof AuthenticatedOnboardWalletKeyRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
-  AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedDashboardRoute: AuthenticatedDashboardRouteWithChildren,
   AuthenticatedOnboardCurrencyRoute: AuthenticatedOnboardCurrencyRoute,
   AuthenticatedOnboardWalletKeyRoute: AuthenticatedOnboardWalletKeyRoute,
 }
@@ -143,7 +203,10 @@ export interface FileRoutesByFullPath {
   '': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/callback/userError': typeof CallbackUserErrorRoute
+  '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
+  '/dashboard/summary': typeof AuthenticatedDashboardSummaryRoute
   '/onboard/currency': typeof AuthenticatedOnboardCurrencyRoute
   '/onboard/wallet-key': typeof AuthenticatedOnboardWalletKeyRoute
 }
@@ -153,7 +216,10 @@ export interface FileRoutesByTo {
   '': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/dashboard': typeof AuthenticatedDashboardRoute
+  '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/callback/userError': typeof CallbackUserErrorRoute
+  '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
+  '/dashboard/summary': typeof AuthenticatedDashboardSummaryRoute
   '/onboard/currency': typeof AuthenticatedOnboardCurrencyRoute
   '/onboard/wallet-key': typeof AuthenticatedOnboardWalletKeyRoute
 }
@@ -164,7 +230,10 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
-  '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
+  '/callback/userError': typeof CallbackUserErrorRoute
+  '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
+  '/_authenticated/dashboard/summary': typeof AuthenticatedDashboardSummaryRoute
   '/_authenticated/onboard/currency': typeof AuthenticatedOnboardCurrencyRoute
   '/_authenticated/onboard/wallet-key': typeof AuthenticatedOnboardWalletKeyRoute
 }
@@ -177,6 +246,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/dashboard'
+    | '/callback/userError'
+    | '/dashboard/settings'
+    | '/dashboard/summary'
     | '/onboard/currency'
     | '/onboard/wallet-key'
   fileRoutesByTo: FileRoutesByTo
@@ -186,6 +258,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/dashboard'
+    | '/callback/userError'
+    | '/dashboard/settings'
+    | '/dashboard/summary'
     | '/onboard/currency'
     | '/onboard/wallet-key'
   id:
@@ -195,6 +270,9 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/_authenticated/dashboard'
+    | '/callback/userError'
+    | '/_authenticated/dashboard/settings'
+    | '/_authenticated/dashboard/summary'
     | '/_authenticated/onboard/currency'
     | '/_authenticated/onboard/wallet-key'
   fileRoutesById: FileRoutesById
@@ -205,6 +283,7 @@ export interface RootRouteChildren {
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
+  CallbackUserErrorRoute: typeof CallbackUserErrorRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -212,6 +291,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
+  CallbackUserErrorRoute: CallbackUserErrorRoute,
 }
 
 export const routeTree = rootRoute
@@ -227,7 +307,8 @@ export const routeTree = rootRoute
         "/",
         "/_authenticated",
         "/login",
-        "/register"
+        "/register",
+        "/callback/userError"
       ]
     },
     "/": {
@@ -249,7 +330,22 @@ export const routeTree = rootRoute
     },
     "/_authenticated/dashboard": {
       "filePath": "_authenticated/dashboard.tsx",
-      "parent": "/_authenticated"
+      "parent": "/_authenticated",
+      "children": [
+        "/_authenticated/dashboard/settings",
+        "/_authenticated/dashboard/summary"
+      ]
+    },
+    "/callback/userError": {
+      "filePath": "callback/userError.tsx"
+    },
+    "/_authenticated/dashboard/settings": {
+      "filePath": "_authenticated/dashboard/settings.tsx",
+      "parent": "/_authenticated/dashboard"
+    },
+    "/_authenticated/dashboard/summary": {
+      "filePath": "_authenticated/dashboard/summary.tsx",
+      "parent": "/_authenticated/dashboard"
     },
     "/_authenticated/onboard/currency": {
       "filePath": "_authenticated/onboard/currency.tsx",
