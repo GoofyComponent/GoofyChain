@@ -24,7 +24,6 @@ function getStoredJwt() {
   return localStorage.getItem(USER_JWT);
 }
 
-
 function setStoredUser(user: User | null) {
   if (user) {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
@@ -39,7 +38,7 @@ function updateStoredUser(user: Partial<User>) {
   if (storedUser) {
     setStoredUser({ ...storedUser, ...user });
   }
-} 
+}
 
 function setStoredJwt(jwt: string | null) {
   if (jwt) {
@@ -73,6 +72,16 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const update = React.useCallback(async (user: Partial<User>) => {
     updateStoredUser(user);
+    setUser((prev) => {
+      if (!prev) {
+        return null;
+      }
+
+      return {
+        ...prev,
+        ...user,
+      };
+    });
   }, []);
 
   React.useEffect(() => {

@@ -1,7 +1,23 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import {
+  createFileRoute,
+  Outlet,
+  redirect,
+  useNavigate,
+} from "@tanstack/react-router";
 import { LoaderCircle } from "lucide-react";
+import { useEffect } from "react";
 
 const API_URL = import.meta.env.VITE_API_URL;
+
+const ErrorPage = () => {
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    navigate({ to: "/callback/userError" });
+  }, [navigate]);
+
+  return null;
+};
 
 export const Route = createFileRoute("/_authenticated/dashboard")({
   beforeLoad: async ({ context, location }) => {
@@ -46,4 +62,5 @@ export const Route = createFileRoute("/_authenticated/dashboard")({
       </div>
     );
   },
+  errorComponent: ErrorPage,
 });
