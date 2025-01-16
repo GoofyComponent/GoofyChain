@@ -2,3 +2,4 @@
 node_modules
 # windsurf rules
 .windsurfrules
+.DS_Store

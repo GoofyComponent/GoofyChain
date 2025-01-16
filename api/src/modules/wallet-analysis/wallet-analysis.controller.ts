@@ -1,12 +1,20 @@
-import { Body, Controller, Get, Post, Query, Version } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Post,
+  Query,
+  Req,
+  Version,
+} from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
-import * as fs from 'fs';
 import { ParseDatePipe } from '../../common/pipes/parse-date.pipe';
 import {
   PortfolioDataPoint,
   PortfolioStats,
   TransactionPoint,
 } from '../crypto-price/types/portfolio.types';
+import { UsersService } from '../users/users.service';
 import { WalletAnalysisService } from './wallet-analysis.service';
 
 @Controller({
@@ -15,7 +23,10 @@ import { WalletAnalysisService } from './wallet-analysis.service';
 })
 @ApiTags('Analyse de Wallet')
 export class WalletAnalysisController {
-  constructor(private readonly walletAnalysisService: WalletAnalysisService) {}
+  constructor(
+    private readonly walletAnalysisService: WalletAnalysisService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Post('analyze')
   @Version('1')
@@ -56,6 +67,7 @@ export class WalletAnalysisController {
     return this.walletAnalysisService.getTransactionPoints(analysisId);
   }
 
+  // @UseGuards(JwtAuthGuard)
   @Get('portfolio-history')
   @ApiOperation({ summary: "Obtenir l'historique de la valeur du portfolio" })
   @ApiResponse({
@@ -66,17 +78,24 @@ export class WalletAnalysisController {
     @Query('walletAddress') walletAddress: string,
     @Query('startDate', ParseDatePipe) startDate: Date,
     @Query('endDate', ParseDatePipe) endDate: Date,
-    @Query('currency') currency: string = 'EUR',
+    @Query('currency') currency?: string,
+    @Req() req?: any,
   ): Promise<PortfolioDataPoint[]> {
-    const analysis =
-      await this.walletAnalysisService.analyzeWallet(walletAddress);
+    let finalCurrency = currency;
 
-    const filePath = `./${walletAddress}-${currency}.json`;
-    fs.writeFileSync(filePath, JSON.stringify(analysis.transactions, null, 2));
+    if (!finalCurrency && req?.user?.id) {
+      const user = await this.usersService.findOne(req.user.id);
+      finalCurrency = user?.preferedCurrency || 'EUR';
+    }
+
+    const analysis = await this.walletAnalysisService.analyzeWallet(
+      walletAddress,
+      finalCurrency,
+    );
 
     return this.walletAnalysisService.getPortfolioHistory(
       analysis.transactions,
-      currency,
+      finalCurrency,
     );
   }
 

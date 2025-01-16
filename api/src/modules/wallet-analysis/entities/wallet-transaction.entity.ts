@@ -20,6 +20,15 @@ export class WalletTransaction {
   @Column()
   walletAddress: string;
 
+  @Column()
+  from: string;
+
+  @Column()
+  to: string;
+
+  @Column('int')
+  blockNumber: number;
+
   @Column('decimal', { precision: 36, scale: 18 })
   value: number;
 
@@ -34,6 +43,12 @@ export class WalletTransaction {
 
   @Column('decimal', { precision: 36, scale: 18 })
   ethPrice: number; // Prix de l'ETH au moment de la transaction
+
+  @Column('decimal', { precision: 36, scale: 18 })
+  valueInCurrency: number; // Valeur en devise
+
+  @Column()
+  currency: string; // Devise utilisée
 
   @Column()
   timestamp: Date;
