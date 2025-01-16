@@ -26,6 +26,6 @@ export class WalletController {
     description: 'Adresse Ethereum du portefeuille',
   })
   async getWalletTransactions(@Param('address') address: string): Promise<any> {
-    return this.walletService.getWalletTransactions(address);
+    return this.walletService.getTransactionList(address);
   }
 }

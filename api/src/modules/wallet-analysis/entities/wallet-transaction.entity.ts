@@ -35,9 +35,6 @@ export class WalletTransaction {
   @Column('decimal', { precision: 36, scale: 18 })
   ethPrice: number; // Prix de l'ETH au moment de la transaction
 
-  @Column('decimal', { precision: 36, scale: 18 })
-  fiatValue: number; // Valeur en devise (EUR/USD)
-
   @Column()
   timestamp: Date;
 
@@ -46,6 +43,9 @@ export class WalletTransaction {
 
   @Column('decimal', { precision: 36, scale: 18 })
   balance: number; // Solde du wallet après cette transaction
+
+  @Column('decimal', { precision: 36, scale: 18 })
+  previousBalance: number; // Solde du wallet avant cette transaction
 
   @ManyToOne(() => WalletAnalysis, (analysis) => analysis.transactions)
   analysis: WalletAnalysis;

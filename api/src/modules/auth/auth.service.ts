@@ -7,11 +7,11 @@ import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
 import { randomBytes } from 'crypto';
-import { v4 as uuidv4 } from 'uuid';
 import { MailService } from '../mail/mail.service';
 import { UsersService } from '../users/users.service';
-import { RegisterDto, TokenResponse } from './dto/auth.dto';
+import { RegisterDto } from './dto/auth.dto';
 import { AccountLockoutService } from './services/account-lockout.service';
+import { RefreshTokenService } from './services/refresh-token.service';
 
 @Injectable()
 export class AuthService {
@@ -21,10 +21,10 @@ export class AuthService {
     private mailService: MailService,
     private configService: ConfigService,
     private accountLockoutService: AccountLockoutService,
+    private refreshTokenService: RefreshTokenService,
   ) {}
 
   async validateUser(email: string, password: string): Promise<any> {
-    // Vérifier si le compte est verrouillé
     const isLocked = await this.accountLockoutService.isAccountLocked(email);
     if (isLocked) {
       throw new UnauthorizedException(
@@ -39,7 +39,6 @@ export class AuthService {
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
     if (!isPasswordValid) {
-      // Enregistrer la tentative échouée
       const isNowLocked =
         await this.accountLockoutService.recordFailedAttempt(email);
       if (isNowLocked) {
@@ -50,20 +49,27 @@ export class AuthService {
       throw new UnauthorizedException('Email ou mot de passe incorrect');
     }
 
-    // Réinitialiser les tentatives en cas de succès
     await this.accountLockoutService.resetAttempts(email);
 
     const { password: _, ...result } = user;
     return result;
   }
 
-  async register(registerDto: RegisterDto): Promise<TokenResponse> {
-    const hashedPassword = await bcrypt.hash(registerDto.password, 10);
-    const activationToken = uuidv4();
+  async register(registerDto: RegisterDto) {
+    const { email, password } = registerDto;
+
+    const existingUser = await this.usersService.findByEmail(email);
+    if (existingUser) {
+      throw new BadRequestException('Cet email est déjà utilisé');
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const activationToken = randomBytes(32).toString('hex');
     const activationTokenExpires = new Date();
     activationTokenExpires.setHours(activationTokenExpires.getHours() + 24);
 
-    const user = await this.usersService.create({
+    await this.usersService.create({
       ...registerDto,
       password: hashedPassword,
       activationToken,
@@ -71,75 +77,50 @@ export class AuthService {
       isEmailVerified: false,
     });
 
-    await this.mailService.sendActivationEmail(user.email, activationToken);
+    await this.mailService.sendActivationEmail(email, activationToken);
 
-    return this.generateTokens(user);
+    return {
+      message: "Un email d'activation a été envoyé à votre adresse email",
+    };
   }
 
-  async login(user: any): Promise<TokenResponse> {
-    const tokens = await this.generateTokens(user);
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
-    return tokens;
-  }
-
-  async refreshToken(
-    userId: string,
-    refreshToken: string,
-  ): Promise<TokenResponse> {
-    const user = await this.usersService.findOne(userId);
-
-    if (!user || !user.refreshToken) {
-      throw new UnauthorizedException('Token de rafraîchissement invalide');
-    }
-
-    const refreshTokenMatches = await bcrypt.compare(
-      refreshToken,
-      user.refreshToken,
-    );
-
-    if (!refreshTokenMatches) {
-      throw new UnauthorizedException('Token de rafraîchissement invalide');
-    }
-
-    if (user.refreshTokenExpires < new Date()) {
-      throw new UnauthorizedException('Token de rafraîchissement expiré');
-    }
-
-    const tokens = await this.generateTokens(user);
-    await this.updateRefreshToken(user.id, tokens.refreshToken);
-    return tokens;
-  }
-
-  async logout(userId: string) {
-    await this.usersService.update(userId, {
-      refreshToken: null,
-      refreshTokenExpires: null,
-    });
+  async login(user: any) {
+    const accessToken = await this.generateAccessToken(user);
+    return {
+      accessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+      },
+    };
   }
 
   async forgotPassword(email: string) {
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      return; // Ne pas révéler si l'email existe ou non
+      return;
     }
 
     const token = randomBytes(32).toString('hex');
     const expires = new Date();
-    expires.setHours(expires.getHours() + 24); // Expire dans 24h
+    expires.setHours(expires.getHours() + 24);
 
     await this.usersService.update(user.id, {
       resetPasswordToken: token,
       resetPasswordTokenExpires: expires,
     });
 
-    // TODO: Envoyer l'email avec le lien de réinitialisation
-    // await this.mailService.sendResetPasswordEmail(user.email, token);
+    await this.mailService.sendResetPasswordEmail(user.email, token);
   }
 
   async resetPassword(token: string, newPassword: string) {
     const user = await this.usersService.findByResetPasswordToken(token);
     if (!user || user.resetPasswordTokenExpires < new Date()) {
-      throw new UnauthorizedException('Token invalide ou expiré');
+      throw new UnauthorizedException(
+        'Le token est invalide ou a expiré. Veuillez réessayer.',
+      );
     }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -183,37 +164,38 @@ export class AuthService {
     return { message: 'Compte activé avec succès' };
   }
 
-  private async generateTokens(user: any) {
-    const payload = { email: user.email, sub: user.id };
+  async resendActivationEmail(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      return {
+        message:
+          "Si votre compte existe, un nouvel email d'activation vous sera envoyé.",
+      };
+    }
 
-    const accessToken = this.jwtService.sign(payload, {
-      secret: this.configService.get('JWT_SECRET'),
-      expiresIn: '15m',
+    if (user.isEmailVerified) {
+      throw new BadRequestException('Votre compte est déjà activé.');
+    }
+
+    const activationToken = randomBytes(32).toString('hex');
+    const activationTokenExpires = new Date();
+    activationTokenExpires.setHours(activationTokenExpires.getHours() + 24);
+
+    await this.usersService.update(user.id, {
+      activationToken,
+      activationTokenExpires,
     });
 
-    const refreshToken = uuidv4();
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
+    await this.mailService.sendActivationEmail(email, activationToken);
 
     return {
-      accessToken,
-      refreshToken,
-      user: {
-        id: user.id,
-        email: user.email,
-        firstName: user.firstName,
-        lastName: user.lastName,
-      },
+      message:
+        "Si votre compte existe, un nouvel email d'activation vous sera envoyé.",
     };
   }
 
-  private async updateRefreshToken(userId: string, refreshToken: string) {
-    const hashedRefreshToken = await bcrypt.hash(refreshToken, 10);
-    const refreshTokenExpires = new Date();
-    refreshTokenExpires.setDate(refreshTokenExpires.getDate() + 7);
-
-    await this.usersService.update(userId, {
-      refreshToken: hashedRefreshToken,
-      refreshTokenExpires,
-    });
+  async generateAccessToken(user: any): Promise<string> {
+    const payload = { sub: user.id, email: user.email };
+    return this.jwtService.sign(payload);
   }
 }

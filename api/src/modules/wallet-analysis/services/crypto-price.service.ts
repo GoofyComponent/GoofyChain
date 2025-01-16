@@ -5,11 +5,17 @@ import axios from 'axios';
 @Injectable()
 export class CryptoPriceService {
   private readonly cryptocompareApi: string;
+  private readonly apiKey: string;
 
   constructor(private readonly configService: ConfigService) {
-    const apiKey = this.configService.get('CRYPTOCOMPARE_API_KEY');
+    this.apiKey = this.configService.get('CRYPTOCOMPARE_API_KEY');
     this.cryptocompareApi = `https://min-api.cryptocompare.com/data`;
-    axios.defaults.headers.common['authorization'] = `Apikey ${apiKey}`;
+    
+    if (this.apiKey) {
+      console.log('CryptoCompare API: Mode authentifié (limites étendues)');
+    } else {
+      console.log('CryptoCompare API: Mode non authentifié (limites restreintes)');
+    }
   }
 
   async getHistoricalPrice(
@@ -18,7 +24,7 @@ export class CryptoPriceService {
   ): Promise<number> {
     try {
       const response = await axios.get(
-        `${this.cryptocompareApi}/pricehistorical?fsym=ETH&tsyms=${currency}&ts=${timestamp}`,
+        `${this.cryptocompareApi}/pricehistorical?fsym=ETH&tsyms=${currency}&ts=${timestamp}${this.apiKey ? `&api_key=${this.apiKey}` : ''}`,
       );
       return response.data.ETH[currency];
     } catch (error) {
@@ -34,7 +40,7 @@ export class CryptoPriceService {
   ): Promise<any[]> {
     try {
       const response = await axios.get(
-        `${this.cryptocompareApi}/v2/histoday?fsym=ETH&tsym=${currency}&toTs=${toTimestamp}&limit=2000`,
+        `${this.cryptocompareApi}/v2/histoday?fsym=ETH&tsym=${currency}&toTs=${toTimestamp}&limit=2000${this.apiKey ? `&api_key=${this.apiKey}` : ''}`,
       );
       return response.data.Data.Data.filter(
         (item: any) => item.time >= fromTimestamp && item.time <= toTimestamp,

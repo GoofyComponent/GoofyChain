@@ -1,5 +1,6 @@
 import { Body, Controller, Get, Post, Query, Version } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
+import * as fs from 'fs';
 import { ParseDatePipe } from '../../common/pipes/parse-date.pipe';
 import {
   PortfolioDataPoint,
@@ -38,16 +39,8 @@ export class WalletAnalysisController {
   })
   async getAnalysisByDateRange(
     @Query('walletAddress') walletAddress: string,
-    @Query('startDate', ParseDatePipe) startDate: Date,
-    @Query('endDate', ParseDatePipe) endDate: Date,
-    @Query('currency') currency: string = 'EUR',
   ): Promise<any> {
-    return this.walletAnalysisService.getAnalysisByDateRange(
-      walletAddress,
-      startDate,
-      endDate,
-      currency,
-    );
+    return this.walletAnalysisService.getAnalysisByDateRange(walletAddress);
   }
 
   @Get('transactions')
@@ -78,6 +71,9 @@ export class WalletAnalysisController {
     const analysis =
       await this.walletAnalysisService.analyzeWallet(walletAddress);
 
+    const filePath = `./${walletAddress}-${currency}.json`;
+    fs.writeFileSync(filePath, JSON.stringify(analysis.transactions, null, 2));
+
     return this.walletAnalysisService.getPortfolioHistory(
       analysis.transactions,
       currency,
@@ -92,14 +88,10 @@ export class WalletAnalysisController {
   })
   async getPortfolioStats(
     @Query('walletAddress') walletAddress: string,
-    @Query('currency') currency: string = 'EUR',
   ): Promise<PortfolioStats> {
     const analysis =
       await this.walletAnalysisService.analyzeWallet(walletAddress);
-    return this.walletAnalysisService.getPortfolioStats(
-      analysis.transactions,
-      currency,
-    );
+    return this.walletAnalysisService.getPortfolioStats(analysis.transactions);
   }
 
   @Get('transactions-summary')
