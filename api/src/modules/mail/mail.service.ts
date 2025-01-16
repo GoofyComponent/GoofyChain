@@ -88,7 +88,9 @@ export class MailService {
   async sendResetPasswordEmail(to: string, token: string) {
     const frontendUrl = this.configService.get('CLIENT_URL');
     if (!frontendUrl) {
-      throw new Error("APP_URL non définie dans les variables d'environnement");
+      throw new Error(
+        "CLIENT_URL non définie dans les variables d'environnement",
+      );
     }
 
     const baseUrl = frontendUrl.endsWith('/')
