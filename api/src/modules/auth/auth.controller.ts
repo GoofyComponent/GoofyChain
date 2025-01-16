@@ -15,11 +15,15 @@ import { LoginDto, RegisterDto, TokenResponse } from './dto/auth.dto';
 import { ForgotPasswordDto, ResetPasswordDto } from './dto/password.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
 import { LocalAuthGuard } from './guards/local-auth.guard';
+import { UsersService } from '../users/users.service';
 
 @Controller({ path: 'auth', version: '1' })
 @ApiTags('Authentication')
 export class AuthController {
-  constructor(private authService: AuthService) {}
+  constructor(
+    private authService: AuthService,
+    private userService: UsersService,
+  ) {}
 
   @Post('register')
   async register(
@@ -78,6 +82,37 @@ export class AuthController {
   @Get('profile')
   getProfile(@Req() req) {
     return req.user;
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Get('profile/has-onboarded')
+  async hasOnboarded(@Req() req) {
+    const userId = req.user.id;
+    const user = await this.userService.findOne(userId);
+    return { hasOnboarded: user.isOnboarded };
+  }
+
+  @UseGuards(JwtAuthGuard)
+  @Post('profile/onboarding-completed')
+  async onboardingCompleted(@Req() req) {
+    const userId = req.user.id;
+    const initialWalletId = req.body.walletId;
+    const preferedCurrency = req.body.preferedCurrency;
+
+    if (!initialWalletId || !preferedCurrency) {
+      throw new Error(
+        'Veuillez fournir un portefeuille et une devise préférée',
+      );
+    }
+
+    //TODO: Check if the user already onboarded
+
+    await this.userService.onboardingCompleted(userId, {
+      initialWalletId,
+      preferedCurrency,
+    });
+
+    return { message: 'Onboarding terminé avec succès' };
   }
 
   @Post('forgot-password')

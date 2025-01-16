@@ -17,6 +17,12 @@ declare module "@tanstack/react-router" {
   interface Register {
     router: typeof router;
   }
+  interface HistoryState {
+    onboardings?: {
+      walletKey?: string;
+      currency?: string;
+    };
+  }
 }
 
 function InnerApp() {

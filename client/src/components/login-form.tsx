@@ -43,7 +43,7 @@ export function LoginForm({
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const registerApi = await fetch(`${API_URL}/api/v1/auth/login`, {
+    const registerApi = await fetch(`${API_URL}/auth/login`, {
       method: "POST",
       body: JSON.stringify({
         email: values.email,
@@ -65,7 +65,6 @@ export function LoginForm({
 
         for (const trigger of triggers) {
           if (message.includes(trigger)) {
-            console.log("Setting error for:", trigger);
             form.setError(trigger as keyof typeof values, {
               type: "server",
               message: message,
