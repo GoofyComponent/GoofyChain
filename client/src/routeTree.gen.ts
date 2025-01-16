@@ -17,6 +17,7 @@ import { Route as ForgotPasswordConfirmationImport } from './routes/forgot-passw
 import { Route as ForgotPasswordImport } from './routes/forgot-password'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
+import { Route as ResetPasswordTokenImport } from './routes/reset-password/$token'
 import { Route as CallbackUserErrorImport } from './routes/callback/userError'
 import { Route as AuthenticatedDashboardImport } from './routes/_authenticated/dashboard'
 import { Route as AuthenticatedOnboardWalletKeyImport } from './routes/_authenticated/onboard/wallet-key'
@@ -60,6 +61,12 @@ const AuthenticatedRoute = AuthenticatedImport.update({
 const IndexRoute = IndexImport.update({
   id: '/',
   path: '/',
+  getParentRoute: () => rootRoute,
+} as any)
+
+const ResetPasswordTokenRoute = ResetPasswordTokenImport.update({
+  id: '/reset-password/$token',
+  path: '/reset-password/$token',
   getParentRoute: () => rootRoute,
 } as any)
 
@@ -163,6 +170,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof CallbackUserErrorImport
       parentRoute: typeof rootRoute
     }
+    '/reset-password/$token': {
+      id: '/reset-password/$token'
+      path: '/reset-password/$token'
+      fullPath: '/reset-password/$token'
+      preLoaderRoute: typeof ResetPasswordTokenImport
+      parentRoute: typeof rootRoute
+    }
     '/_authenticated/dashboard/settings': {
       id: '/_authenticated/dashboard/settings'
       path: '/settings'
@@ -237,6 +251,7 @@ export interface FileRoutesByFullPath {
   '/register': typeof RegisterRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/callback/userError': typeof CallbackUserErrorRoute
+  '/reset-password/$token': typeof ResetPasswordTokenRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/summary': typeof AuthenticatedDashboardSummaryRoute
   '/onboard/currency': typeof AuthenticatedOnboardCurrencyRoute
@@ -252,6 +267,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/callback/userError': typeof CallbackUserErrorRoute
+  '/reset-password/$token': typeof ResetPasswordTokenRoute
   '/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/dashboard/summary': typeof AuthenticatedDashboardSummaryRoute
   '/onboard/currency': typeof AuthenticatedOnboardCurrencyRoute
@@ -268,6 +284,7 @@ export interface FileRoutesById {
   '/register': typeof RegisterRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
   '/callback/userError': typeof CallbackUserErrorRoute
+  '/reset-password/$token': typeof ResetPasswordTokenRoute
   '/_authenticated/dashboard/settings': typeof AuthenticatedDashboardSettingsRoute
   '/_authenticated/dashboard/summary': typeof AuthenticatedDashboardSummaryRoute
   '/_authenticated/onboard/currency': typeof AuthenticatedOnboardCurrencyRoute
@@ -285,6 +302,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/dashboard'
     | '/callback/userError'
+    | '/reset-password/$token'
     | '/dashboard/settings'
     | '/dashboard/summary'
     | '/onboard/currency'
@@ -299,6 +317,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/dashboard'
     | '/callback/userError'
+    | '/reset-password/$token'
     | '/dashboard/settings'
     | '/dashboard/summary'
     | '/onboard/currency'
@@ -313,6 +332,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/_authenticated/dashboard'
     | '/callback/userError'
+    | '/reset-password/$token'
     | '/_authenticated/dashboard/settings'
     | '/_authenticated/dashboard/summary'
     | '/_authenticated/onboard/currency'
@@ -328,6 +348,7 @@ export interface RootRouteChildren {
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   CallbackUserErrorRoute: typeof CallbackUserErrorRoute
+  ResetPasswordTokenRoute: typeof ResetPasswordTokenRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
@@ -338,6 +359,7 @@ const rootRouteChildren: RootRouteChildren = {
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   CallbackUserErrorRoute: CallbackUserErrorRoute,
+  ResetPasswordTokenRoute: ResetPasswordTokenRoute,
 }
 
 export const routeTree = rootRoute
@@ -356,7 +378,8 @@ export const routeTree = rootRoute
         "/forgot-password-confirmation",
         "/login",
         "/register",
-        "/callback/userError"
+        "/callback/userError",
+        "/reset-password/$token"
       ]
     },
     "/": {
@@ -392,6 +415,9 @@ export const routeTree = rootRoute
     },
     "/callback/userError": {
       "filePath": "callback/userError.tsx"
+    },
+    "/reset-password/$token": {
+      "filePath": "reset-password/$token.tsx"
     },
     "/_authenticated/dashboard/settings": {
       "filePath": "_authenticated/dashboard/settings.tsx",
