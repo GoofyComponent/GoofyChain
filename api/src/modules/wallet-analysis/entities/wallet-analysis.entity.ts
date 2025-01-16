@@ -18,6 +18,9 @@ export class WalletAnalysis {
   @Column()
   walletAddress: string;
 
+  @Column()
+  currency: string;
+
   @Column('decimal', { precision: 36, scale: 18 })
   totalGasFees: number;
 
@@ -26,6 +29,20 @@ export class WalletAnalysis {
 
   @Column('decimal', { precision: 36, scale: 18 })
   totalOutgoing: number;
+
+  @Column('decimal', { precision: 36, scale: 18 })
+  netBalance: number;
+
+  @Column('jsonb', { nullable: true })
+  currencyValues: {
+    [key: string]: {
+      totalGasFees: number;
+      totalIncoming: number;
+      totalOutgoing: number;
+      netBalance: number;
+      exchangeRate: number;
+    };
+  };
 
   @Column('int')
   totalTransactions: number;
@@ -41,7 +58,4 @@ export class WalletAnalysis {
 
   @UpdateDateColumn()
   updatedAt: Date;
-
-  @Column('decimal', { precision: 36, scale: 18 })
-  netBalance: number;
 }

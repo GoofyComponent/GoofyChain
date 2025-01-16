@@ -1,8 +1,9 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AuthModule } from '../auth/auth.module';
+import { AccountLockoutModule } from '../auth/services/account-lockout.module';
 import { CryptoPriceModule } from '../crypto-price/crypto-price.module';
+import { UsersModule } from '../users/users.module';
 import { WalletAnalysis } from './entities/wallet-analysis.entity';
 import { WalletTransaction } from './entities/wallet-transaction.entity';
 import { WalletAnalysisController } from './wallet-analysis.controller';
@@ -10,12 +11,13 @@ import { WalletAnalysisService } from './wallet-analysis.service';
 
 @Module({
   imports: [
-    ConfigModule,
     TypeOrmModule.forFeature([WalletAnalysis, WalletTransaction]),
-    AuthModule,
+    ConfigModule,
     CryptoPriceModule,
+    UsersModule,
+    AccountLockoutModule,
   ],
-  providers: [WalletAnalysisService],
   controllers: [WalletAnalysisController],
+  providers: [WalletAnalysisService],
 })
 export class WalletAnalysisModule {}

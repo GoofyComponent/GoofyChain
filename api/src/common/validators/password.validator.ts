@@ -6,6 +6,7 @@ import {
 
 @ValidatorConstraint({ name: 'strongPassword', async: false })
 export class StrongPasswordValidator implements ValidatorConstraintInterface {
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   validate(password: string, args: ValidationArguments) {
     if (!password) return false;
 
