@@ -16,6 +16,8 @@ import { Route as LoginImport } from './routes/login'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
 import { Route as AuthenticatedDashboardImport } from './routes/_authenticated/dashboard'
+import { Route as AuthenticatedOnboardWalletKeyImport } from './routes/_authenticated/onboard/wallet-key'
+import { Route as AuthenticatedOnboardCurrencyImport } from './routes/_authenticated/onboard/currency'
 
 // Create/Update Routes
 
@@ -47,6 +49,20 @@ const AuthenticatedDashboardRoute = AuthenticatedDashboardImport.update({
   path: '/dashboard',
   getParentRoute: () => AuthenticatedRoute,
 } as any)
+
+const AuthenticatedOnboardWalletKeyRoute =
+  AuthenticatedOnboardWalletKeyImport.update({
+    id: '/onboard/wallet-key',
+    path: '/onboard/wallet-key',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
+
+const AuthenticatedOnboardCurrencyRoute =
+  AuthenticatedOnboardCurrencyImport.update({
+    id: '/onboard/currency',
+    path: '/onboard/currency',
+    getParentRoute: () => AuthenticatedRoute,
+  } as any)
 
 // Populate the FileRoutesByPath interface
 
@@ -87,6 +103,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedDashboardImport
       parentRoute: typeof AuthenticatedImport
     }
+    '/_authenticated/onboard/currency': {
+      id: '/_authenticated/onboard/currency'
+      path: '/onboard/currency'
+      fullPath: '/onboard/currency'
+      preLoaderRoute: typeof AuthenticatedOnboardCurrencyImport
+      parentRoute: typeof AuthenticatedImport
+    }
+    '/_authenticated/onboard/wallet-key': {
+      id: '/_authenticated/onboard/wallet-key'
+      path: '/onboard/wallet-key'
+      fullPath: '/onboard/wallet-key'
+      preLoaderRoute: typeof AuthenticatedOnboardWalletKeyImport
+      parentRoute: typeof AuthenticatedImport
+    }
   }
 }
 
@@ -94,10 +124,14 @@ declare module '@tanstack/react-router' {
 
 interface AuthenticatedRouteChildren {
   AuthenticatedDashboardRoute: typeof AuthenticatedDashboardRoute
+  AuthenticatedOnboardCurrencyRoute: typeof AuthenticatedOnboardCurrencyRoute
+  AuthenticatedOnboardWalletKeyRoute: typeof AuthenticatedOnboardWalletKeyRoute
 }
 
 const AuthenticatedRouteChildren: AuthenticatedRouteChildren = {
   AuthenticatedDashboardRoute: AuthenticatedDashboardRoute,
+  AuthenticatedOnboardCurrencyRoute: AuthenticatedOnboardCurrencyRoute,
+  AuthenticatedOnboardWalletKeyRoute: AuthenticatedOnboardWalletKeyRoute,
 }
 
 const AuthenticatedRouteWithChildren = AuthenticatedRoute._addFileChildren(
@@ -110,6 +144,8 @@ export interface FileRoutesByFullPath {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/onboard/currency': typeof AuthenticatedOnboardCurrencyRoute
+  '/onboard/wallet-key': typeof AuthenticatedOnboardWalletKeyRoute
 }
 
 export interface FileRoutesByTo {
@@ -118,6 +154,8 @@ export interface FileRoutesByTo {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard': typeof AuthenticatedDashboardRoute
+  '/onboard/currency': typeof AuthenticatedOnboardCurrencyRoute
+  '/onboard/wallet-key': typeof AuthenticatedOnboardWalletKeyRoute
 }
 
 export interface FileRoutesById {
@@ -127,13 +165,29 @@ export interface FileRoutesById {
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRoute
+  '/_authenticated/onboard/currency': typeof AuthenticatedOnboardCurrencyRoute
+  '/_authenticated/onboard/wallet-key': typeof AuthenticatedOnboardWalletKeyRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '' | '/login' | '/register' | '/dashboard'
+  fullPaths:
+    | '/'
+    | ''
+    | '/login'
+    | '/register'
+    | '/dashboard'
+    | '/onboard/currency'
+    | '/onboard/wallet-key'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '' | '/login' | '/register' | '/dashboard'
+  to:
+    | '/'
+    | ''
+    | '/login'
+    | '/register'
+    | '/dashboard'
+    | '/onboard/currency'
+    | '/onboard/wallet-key'
   id:
     | '__root__'
     | '/'
@@ -141,6 +195,8 @@ export interface FileRouteTypes {
     | '/login'
     | '/register'
     | '/_authenticated/dashboard'
+    | '/_authenticated/onboard/currency'
+    | '/_authenticated/onboard/wallet-key'
   fileRoutesById: FileRoutesById
 }
 
@@ -180,7 +236,9 @@ export const routeTree = rootRoute
     "/_authenticated": {
       "filePath": "_authenticated.tsx",
       "children": [
-        "/_authenticated/dashboard"
+        "/_authenticated/dashboard",
+        "/_authenticated/onboard/currency",
+        "/_authenticated/onboard/wallet-key"
       ]
     },
     "/login": {
@@ -191,6 +249,14 @@ export const routeTree = rootRoute
     },
     "/_authenticated/dashboard": {
       "filePath": "_authenticated/dashboard.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/onboard/currency": {
+      "filePath": "_authenticated/onboard/currency.tsx",
+      "parent": "/_authenticated"
+    },
+    "/_authenticated/onboard/wallet-key": {
+      "filePath": "_authenticated/onboard/wallet-key.tsx",
       "parent": "/_authenticated"
     }
   }

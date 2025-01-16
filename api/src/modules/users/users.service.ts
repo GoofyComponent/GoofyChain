@@ -42,4 +42,21 @@ export class UsersService {
     await this.usersRepository.update(id, updateData);
     return this.findOne(id);
   }
+
+  async onboardingCompleted(
+    id: string,
+    data: {
+      initialWalletId: string;
+      preferedCurrency: string;
+    },
+  ): Promise<User> {
+    await this.usersRepository.update(id, {
+      wallets: [data.initialWalletId],
+      initialWalletId: data.initialWalletId,
+      preferedCurrency: data.preferedCurrency,
+      isOnboarded: true,
+    });
+
+    return this.findOne(id);
+  }
 }

@@ -12,19 +12,15 @@ function getStoredUser() {
   const user = localStorage.getItem(USER_KEY);
 
   if (user) {
-    console.log("User getStoredUser", user);
-
     return JSON.parse(user);
   }
 
-  console.log("no user found");
+  console.warn("no user found");
 
   return null;
 }
 
 function getStoredJwt() {
-  console.log("JWT getStoredJwt", localStorage.getItem(USER_JWT));
-
   return localStorage.getItem(USER_JWT);
 }
 

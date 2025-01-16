@@ -1,4 +1,4 @@
-import { GalleryVerticalEnd, LoaderCircle } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
@@ -14,9 +14,12 @@ import {
   FormLabel,
   FormMessage,
 } from "./ui/form";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import useAuth from "@/hooks/useAuth";
 import clsx from "clsx";
+import HyperText from "./ui/hyper-text";
+
+import logo from "@/assets/img/logo.png";
 
 const API_URL = import.meta.env.VITE_API_URL;
 const formSchema = z
@@ -64,7 +67,7 @@ export function SignupForm({
   });
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    const registerApi = await fetch(`${API_URL}/api/v1/auth/register`, {
+    const registerApi = await fetch(`${API_URL}/auth/register`, {
       method: "POST",
       body: JSON.stringify({
         email: values.email,
@@ -89,7 +92,6 @@ export function SignupForm({
 
         for (const trigger of triggers) {
           if (message.includes(trigger)) {
-            console.log("Setting error", trigger);
             form.setError(trigger as keyof typeof values, {
               type: "server",
               message: message,
@@ -117,21 +119,27 @@ export function SignupForm({
         <form onSubmit={form.handleSubmit(onSubmit)}>
           <div className="flex flex-col gap-6">
             <div className="flex flex-col items-center gap-2">
-              <a
-                href="#"
+              <Link
+                to="/"
                 className="flex flex-col items-center gap-2 font-medium"
               >
-                <div className="flex h-8 w-8 items-center justify-center rounded-md">
-                  <GalleryVerticalEnd className="size-6" />
+                <div className="flex h-10 w-10 items-center justify-center rounded-md">
+                  <img src={logo} className="h-10 select-none" />
                 </div>
                 <span className="sr-only">GoofyChain</span>
-              </a>
-              <h1 className="text-xl font-bold">Welcome to Acme Inc.</h1>
+              </Link>
+              <h1 className="text-xl font-bold">Welcome to</h1>
+              <HyperText
+                className="text-5xl font-bold select-none"
+                animateOnHover={false}
+              >
+                GoofyChain
+              </HyperText>
               <div className="text-center text-sm">
                 Already have an account?{" "}
-                <a href="/login" className="underline underline-offset-4">
+                <Link to="/login" className="underline underline-offset-4">
                   Sign in
-                </a>
+                </Link>
               </div>
             </div>
             <div className="flex flex-col gap-6">
@@ -215,8 +223,8 @@ export function SignupForm({
         </form>
       </Form>
       <div className="text-balance text-center text-xs text-muted-foreground [&_a]:underline [&_a]:underline-offset-4 hover:[&_a]:text-primary  ">
-        By clicking "Register", you agree to our{" "}
-        <a href="#">Terms of Service</a> and <a href="#">Privacy Policy</a>.
+        By clicking "Register", you agree to our Terms of Service and Privacy
+        Policy.
       </div>
     </div>
   );

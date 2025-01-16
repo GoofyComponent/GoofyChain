@@ -30,8 +30,17 @@ export class User {
   @Column('simple-array', { nullable: true })
   wallets: string[];
 
+  @Column({ nullable: true })
+  initialWalletId: string;
+
+  @Column({ nullable: true })
+  preferedCurrency: string;
+
   @Column({ default: false })
   isEmailVerified: boolean;
+
+  @Column({ default: false })
+  isOnboarded: boolean;
 
   @Column({ nullable: true })
   activationToken: string;

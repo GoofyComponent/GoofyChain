@@ -8,6 +8,7 @@ import {
   SidebarTrigger,
 } from "@/components/ui/sidebar";
 import useAuth from "@/hooks/useAuth";
+import { Helmet } from "react-helmet";
 
 export const DashboardLayout = () => {
   const navigate = useNavigate();
@@ -19,6 +20,19 @@ export const DashboardLayout = () => {
 
   return (
     <SidebarProvider>
+      <Helmet>
+        <meta charSet="utf-8" />
+        <title>GoofyChain - Dashboard</title>
+        <meta
+          name="description"
+          content="Your dashboard to view transactions and Ethereum prices."
+        />
+        <meta
+          name="keywords"
+          content="GoofyChain, Ethereum, Transactions, Prices"
+        />
+        <link rel="icon" type="image/svg+xml" href="/logo.png" />
+      </Helmet>
       <AppSidebar
         user={user}
         logout={async () => {
