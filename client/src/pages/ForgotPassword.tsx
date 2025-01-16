@@ -1,12 +1,12 @@
-import { ResetPasswordForm } from "@/components/forgotpassword-form";
+import { ForgotPasswordForm } from "@/components/forgotpassword-form";
 import { Helmet } from "react-helmet";
 
-export default function ResetPasswordPage() {
+export default function ForgotPasswordPage() {
   return (
     <div className="flex min-h-svh flex-col items-center justify-center gap-6 bg-background p-6 md:p-10">
       <Helmet>
         <meta charSet="utf-8" />
-        <title>GoofyChain - Reset Password</title>
+        <title>GoofyChain - Forgot Password</title>
         <meta
           name="description"
           content="GoofyChain is the best platform to view transactions and Ethereum prices."
@@ -18,7 +18,7 @@ export default function ResetPasswordPage() {
         <link rel="icon" type="image/svg+xml" href="/logo.png" />
       </Helmet>
       <div className="w-full max-w-sm">
-        <ResetPasswordForm />
+        <ForgotPasswordForm />
       </div>
     </div>
   );

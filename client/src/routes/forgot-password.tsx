@@ -5,7 +5,7 @@ export const Route = createFileRoute("/forgot-password")({
   beforeLoad: ({ context }) => {
     if (context.auth.isAuthenticated) {
       throw redirect({
-        to: "/login",
+        to: "/forgot-password-confirmation",
       });
     }
   },

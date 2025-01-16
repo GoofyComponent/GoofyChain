@@ -13,6 +13,7 @@
 import { Route as rootRoute } from './routes/__root'
 import { Route as RegisterImport } from './routes/register'
 import { Route as LoginImport } from './routes/login'
+import { Route as ForgotPasswordConfirmationImport } from './routes/forgot-password-confirmation'
 import { Route as ForgotPasswordImport } from './routes/forgot-password'
 import { Route as AuthenticatedImport } from './routes/_authenticated'
 import { Route as IndexImport } from './routes/index'
@@ -36,6 +37,14 @@ const LoginRoute = LoginImport.update({
   path: '/login',
   getParentRoute: () => rootRoute,
 } as any)
+
+const ForgotPasswordConfirmationRoute = ForgotPasswordConfirmationImport.update(
+  {
+    id: '/forgot-password-confirmation',
+    path: '/forgot-password-confirmation',
+    getParentRoute: () => rootRoute,
+  } as any,
+)
 
 const ForgotPasswordRoute = ForgotPasswordImport.update({
   id: '/forgot-password',
@@ -117,6 +126,13 @@ declare module '@tanstack/react-router' {
       path: '/forgot-password'
       fullPath: '/forgot-password'
       preLoaderRoute: typeof ForgotPasswordImport
+      parentRoute: typeof rootRoute
+    }
+    '/forgot-password-confirmation': {
+      id: '/forgot-password-confirmation'
+      path: '/forgot-password-confirmation'
+      fullPath: '/forgot-password-confirmation'
+      preLoaderRoute: typeof ForgotPasswordConfirmationImport
       parentRoute: typeof rootRoute
     }
     '/login': {
@@ -216,6 +232,7 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
+  '/forgot-password-confirmation': typeof ForgotPasswordConfirmationRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
@@ -230,6 +247,7 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '': typeof AuthenticatedRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
+  '/forgot-password-confirmation': typeof ForgotPasswordConfirmationRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/dashboard': typeof AuthenticatedDashboardRouteWithChildren
@@ -245,6 +263,7 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/_authenticated': typeof AuthenticatedRouteWithChildren
   '/forgot-password': typeof ForgotPasswordRoute
+  '/forgot-password-confirmation': typeof ForgotPasswordConfirmationRoute
   '/login': typeof LoginRoute
   '/register': typeof RegisterRoute
   '/_authenticated/dashboard': typeof AuthenticatedDashboardRouteWithChildren
@@ -261,6 +280,7 @@ export interface FileRouteTypes {
     | '/'
     | ''
     | '/forgot-password'
+    | '/forgot-password-confirmation'
     | '/login'
     | '/register'
     | '/dashboard'
@@ -274,6 +294,7 @@ export interface FileRouteTypes {
     | '/'
     | ''
     | '/forgot-password'
+    | '/forgot-password-confirmation'
     | '/login'
     | '/register'
     | '/dashboard'
@@ -287,6 +308,7 @@ export interface FileRouteTypes {
     | '/'
     | '/_authenticated'
     | '/forgot-password'
+    | '/forgot-password-confirmation'
     | '/login'
     | '/register'
     | '/_authenticated/dashboard'
@@ -302,6 +324,7 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AuthenticatedRoute: typeof AuthenticatedRouteWithChildren
   ForgotPasswordRoute: typeof ForgotPasswordRoute
+  ForgotPasswordConfirmationRoute: typeof ForgotPasswordConfirmationRoute
   LoginRoute: typeof LoginRoute
   RegisterRoute: typeof RegisterRoute
   CallbackUserErrorRoute: typeof CallbackUserErrorRoute
@@ -311,6 +334,7 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AuthenticatedRoute: AuthenticatedRouteWithChildren,
   ForgotPasswordRoute: ForgotPasswordRoute,
+  ForgotPasswordConfirmationRoute: ForgotPasswordConfirmationRoute,
   LoginRoute: LoginRoute,
   RegisterRoute: RegisterRoute,
   CallbackUserErrorRoute: CallbackUserErrorRoute,
@@ -329,6 +353,7 @@ export const routeTree = rootRoute
         "/",
         "/_authenticated",
         "/forgot-password",
+        "/forgot-password-confirmation",
         "/login",
         "/register",
         "/callback/userError"
@@ -347,6 +372,9 @@ export const routeTree = rootRoute
     },
     "/forgot-password": {
       "filePath": "forgot-password.tsx"
+    },
+    "/forgot-password-confirmation": {
+      "filePath": "forgot-password-confirmation.tsx"
     },
     "/login": {
       "filePath": "login.tsx"

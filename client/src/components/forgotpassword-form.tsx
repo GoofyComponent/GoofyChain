@@ -25,7 +25,7 @@ const formSchema = z.object({
   email: z.string().email(),
 });
 
-export function ResetPasswordForm({
+export function ForgotPasswordForm({
   className,
   ...props
 }: React.ComponentPropsWithoutRef<"div">) {
@@ -76,7 +76,7 @@ export function ResetPasswordForm({
 
       await login(user, jwt);
       return navigate({
-        to: "/login",
+        to: "/forgot-password-confirmation",
       });
     }
   };
