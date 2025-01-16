@@ -13,7 +13,7 @@ export class UsersService {
   async create(createUserDto: Partial<User>): Promise<User> {
     const existingUser = await this.findByEmail(createUserDto.email);
     if (existingUser) {
-      throw new ConflictException('Cet email est déjà utilisé');
+      throw new ConflictException('This email is already in use');
     }
 
     const user = this.usersRepository.create(createUserDto);

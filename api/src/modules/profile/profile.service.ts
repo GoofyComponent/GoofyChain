@@ -18,7 +18,7 @@ export class ProfileService {
     });
 
     if (!user) {
-      throw new NotFoundException('Utilisateur non trouvé');
+      throw new NotFoundException('User not found');
     }
 
     return {
@@ -32,31 +32,31 @@ export class ProfileService {
     });
 
     if (!user) {
-      throw new NotFoundException('Utilisateur non trouvé');
+      throw new NotFoundException('User not found');
     }
 
-    // Vérifier chaque adresse individuellement pour donner un message d'erreur plus précis
+    // Check each address individually to provide a more precise error message
     addresses.forEach((address) => {
       if (!address.startsWith('0x')) {
-        throw new Error(`L'adresse ${address} doit commencer par '0x'`);
+        throw new Error(`The address ${address} must start with '0x'`);
       }
 
       const addressWithout0x = address.slice(2);
       if (addressWithout0x.length > 40) {
         throw new Error(
-          `L'adresse ${address} semble être une clé privée. Veuillez fournir une adresse Ethereum publique (40 caractères après '0x')`,
+          `The address ${address} seems to be a private key. Please provide a public Ethereum address (40 characters after '0x')`,
         );
       }
 
       if (addressWithout0x.length < 40) {
         throw new Error(
-          `L'adresse ${address} est trop courte. Une adresse Ethereum doit avoir exactement 40 caractères après '0x'`,
+          `The address ${address} is too short. An Ethereum address must be exactly 40 characters after '0x'`,
         );
       }
 
       if (!/^[a-fA-F0-9]{40}$/.test(addressWithout0x)) {
         throw new Error(
-          `L'adresse ${address} contient des caractères invalides. Seuls les caractères hexadécimaux (0-9, a-f, A-F) sont autorisés`,
+          `The address ${address} contains invalid characters. Only hexadecimal characters (0-9, a-f, A-F) are allowed`,
         );
       }
     });
@@ -64,7 +64,7 @@ export class ProfileService {
     await this.userRepository.update(userId, { wallets: addresses });
 
     return {
-      message: 'Wallets mis à jour avec succès',
+      message: 'Wallets updated successfully',
       wallets: addresses,
     };
   }
@@ -84,7 +84,7 @@ export class ProfileService {
     });
 
     if (!user) {
-      throw new NotFoundException('Utilisateur non trouvé');
+      throw new NotFoundException('User not found');
     }
 
     return {
@@ -104,10 +104,10 @@ export class ProfileService {
     });
 
     if (!user) {
-      throw new NotFoundException('Utilisateur non trouvé');
+      throw new NotFoundException('User not found');
     }
 
-    //Find the previous initialWalletId inside wallets and delete it
+    // Find the previous initialWalletId inside wallets and delete it
     const wallets = user.wallets || [];
     const previousInitialWalletId = user.initialWalletId;
     const toDeleteIndex = wallets.indexOf(previousInitialWalletId);
@@ -120,7 +120,7 @@ export class ProfileService {
     await this.userRepository.update(userId, data);
 
     return {
-      message: 'Donnees du profil mises a jour avec succes',
+      message: 'Profile data updated successfully',
       ...data,
     };
   }
@@ -131,7 +131,7 @@ export class ProfileService {
     });
 
     if (!user) {
-      throw new NotFoundException('Utilisateur non trouve');
+      throw new NotFoundException('User not found');
     }
 
     const hashedPassword = await bcrypt.hash(data.newPassword, 10);
@@ -139,7 +139,7 @@ export class ProfileService {
     const isPasswordValid = await bcrypt.compare(data.password, user.password);
 
     if (!isPasswordValid) {
-      throw new Error('Mot de passe incorrect');
+      throw new Error('Incorrect password');
     }
 
     await this.userRepository.update(userId, {
@@ -147,7 +147,7 @@ export class ProfileService {
     });
 
     return {
-      message: 'Mot de passe mis a jour avec succes',
+      message: 'Password updated successfully',
     };
   }
 }

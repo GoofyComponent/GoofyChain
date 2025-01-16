@@ -27,6 +27,6 @@ export class StrongPasswordValidator implements ValidatorConstraintInterface {
 
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
   defaultMessage(args: ValidationArguments) {
-    return 'Le mot de passe doit contenir au moins 8 caractères, une majuscule, une minuscule, un chiffre et un caractère spécial';
+    return 'Password must contain at least 8 characters, one uppercase letter, one lowercase letter, one number and one special character';
   }
 }

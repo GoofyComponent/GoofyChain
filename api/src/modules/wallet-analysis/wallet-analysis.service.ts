@@ -36,7 +36,7 @@ export class WalletAnalysisService {
     startBlock = 0,
     endBlock = 99999999,
   ): Promise<any[]> {
-    console.log(`Récupération des transactions internes pour ${address}`);
+    console.log(`Recovery of internal transactions for ${address}`);
 
     let allInternalTxs: any[] = [];
     let currentStartBlock = startBlock;
@@ -73,16 +73,13 @@ export class WalletAnalysisService {
 
         await new Promise((resolve) => setTimeout(resolve, 200));
       } catch (error) {
-        console.error(
-          'Erreur lors de la récupération des transactions internes:',
-          error,
-        );
+        console.error('Error retrieving internal transactions:', error);
         throw error;
       }
     }
 
     console.log(
-      `\nRécupération terminée! Total: ${allInternalTxs.length} transactions internes`,
+      `\nRecovery Complete! Total: ${allInternalTxs.length} internal transactions`,
     );
     return allInternalTxs;
   }
@@ -93,7 +90,7 @@ export class WalletAnalysisService {
     endBlock = 99999999,
   ): Promise<any[]> {
     console.error(
-      `\x1b[31mDébut de la récupération des transactions pour ${address}\x1b[0m`,
+      `\x1b[31mStart of transaction recovery for ${address}\x1b[0m`,
     );
     //Ó console.error(
     //   `\x1b[31mBlock de départ: ${startBlock}, Block de fin: ${endBlock}\x1b[0m`,
@@ -150,16 +147,13 @@ export class WalletAnalysisService {
         // console.log('Pause de 200ms...');
         await new Promise((resolve) => setTimeout(resolve, 200));
       } catch (error) {
-        console.error(
-          'Erreur lors de la récupération des transactions:',
-          error,
-        );
+        console.error('Error retrieving transactions:', error);
         throw error;
       }
     }
 
     console.log(
-      `\nRécupération terminée! Total: ${allTransactions.length} transactions`,
+      `\nRecovery complete! Total: ${allTransactions.length} transactions`,
     );
     return allTransactions;
   }

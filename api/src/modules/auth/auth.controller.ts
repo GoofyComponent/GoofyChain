@@ -31,10 +31,10 @@ export class AuthController {
   ) {}
 
   @Post('register')
-  @ApiOperation({ summary: 'Inscription utilisateur' })
+  @ApiOperation({ summary: 'User registration' })
   @ApiResponse({
     status: 201,
-    description: "Email d'activation envoyé",
+    description: 'Activation email sent',
   })
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
@@ -111,14 +111,14 @@ export class AuthController {
   }
 
   @Get('activate/:token')
-  @ApiOperation({ summary: 'Activer le compte utilisateur' })
+  @ApiOperation({ summary: 'Activate user account' })
   @ApiResponse({
     status: 200,
-    description: 'Compte activé avec succès',
+    description: 'Account successfully activated',
   })
   @ApiResponse({
     status: 302,
-    description: 'Redirection vers le front-end',
+    description: 'Redirect to front-end',
   })
   async activateAccount(
     @Param('token') token: string,
@@ -162,9 +162,7 @@ export class AuthController {
     const preferedCurrency = req.body.preferedCurrency;
 
     if (!initialWalletId || !preferedCurrency) {
-      throw new Error(
-        'Veuillez fournir un portefeuille et une devise préférée',
-      );
+      throw new Error('Please provide a wallet and preferred currency');
     }
 
     //TODO: Check if the user already onboarded
@@ -174,53 +172,52 @@ export class AuthController {
       preferedCurrency,
     });
 
-    return { message: 'Onboarding terminé avec succès' };
+    return { message: 'Onboarding successfully completed' };
   }
 
   @Post('forgot-password')
-  @ApiOperation({ summary: 'Demander la réinitialisation du mot de passe' })
+  @ApiOperation({ summary: 'Request password reset' })
   @ApiResponse({
     status: 200,
-    description: 'Email de réinitialisation envoyé avec succès',
+    description: 'Reset email sent successfully',
   })
   async forgotPassword(@Body() forgotPasswordDto: ForgotPasswordDto) {
     await this.authService.forgotPassword(forgotPasswordDto.email);
     return {
-      message:
-        'Si votre email existe, vous recevrez un lien de réinitialisation',
+      message: 'If your email exists, you will receive a reset link',
     };
   }
 
   @Post('reset-password')
-  @ApiOperation({ summary: 'Réinitialiser le mot de passe' })
+  @ApiOperation({ summary: 'Reset Password' })
   @ApiResponse({
     status: 200,
-    description: 'Mot de passe réinitialisé avec succès',
+    description: 'Password reset successfully',
   })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     await this.authService.resetPassword(
       resetPasswordDto.token,
       resetPasswordDto.password,
     );
-    return { message: 'Mot de passe réinitialisé avec succès' };
+    return { message: 'Password reset successfully' };
   }
 
   @Get('verify-email/:token')
-  @ApiOperation({ summary: "Vérifier l'email" })
+  @ApiOperation({ summary: 'Verify Email' })
   @ApiResponse({
     status: 200,
-    description: 'Email vérifié avec succès',
+    description: 'Email verified successfully',
   })
   async verifyEmail(@Param('token') token: string) {
     await this.authService.verifyEmail(token);
-    return { message: 'Email vérifié avec succès' };
+    return { message: 'Email verified successfully' };
   }
 
   @Post('resend-activation')
-  @ApiOperation({ summary: "Renvoyer l'email d'activation" })
+  @ApiOperation({ summary: 'Resend activation email' })
   @ApiResponse({
     status: 200,
-    description: "Email d'activation renvoyé avec succès",
+    description: 'Activation email successfully resent',
   })
   async resendActivationEmail(@Body('email') email: string) {
     return this.authService.resendActivationEmail(email);

@@ -8,10 +8,10 @@ export class WalletController {
   constructor(private readonly walletService: WalletService) {}
 
   @Get(':address/balance')
-  @ApiOperation({ summary: "Obtenir le solde d'un portefeuille" })
+  @ApiOperation({ summary: 'Get the balance of a wallet' })
   @ApiParam({
     name: 'address',
-    description: 'Adresse Ethereum du portefeuille',
+    description: 'Ethereum address of the wallet',
   })
   async getWalletBalance(@Param('address') address: string) {
     return this.walletService.getWalletBalance(address);
@@ -19,11 +19,11 @@ export class WalletController {
 
   @Get(':address/transactions')
   @ApiOperation({
-    summary: "Obtenir l'historique des transactions d'un portefeuille",
+    summary: 'Get the transaction history of a wallet',
   })
   @ApiParam({
     name: 'address',
-    description: 'Adresse Ethereum du portefeuille',
+    description: 'Ethereum address of the wallet',
   })
   async getWalletTransactions(@Param('address') address: string): Promise<any> {
     return this.walletService.getTransactionList(address);

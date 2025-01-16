@@ -28,13 +28,13 @@ export class AuthService {
     const isLocked = await this.accountLockoutService.isAccountLocked(email);
     if (isLocked) {
       throw new UnauthorizedException(
-        'Compte temporairement verrouillé. Veuillez réessayer plus tard.',
+        'Account temporarily locked. Please try again later.',
       );
     }
 
     const user = await this.usersService.findByEmail(email);
     if (!user) {
-      throw new UnauthorizedException('Email ou mot de passe incorrect');
+      throw new UnauthorizedException('Incorrect email or password');
     }
 
     const isPasswordValid = await bcrypt.compare(password, user.password);
@@ -43,10 +43,10 @@ export class AuthService {
         await this.accountLockoutService.recordFailedAttempt(email);
       if (isNowLocked) {
         throw new UnauthorizedException(
-          'Compte temporairement verrouillé suite à trop de tentatives.',
+          'Account temporarily locked due to too many attempts.',
         );
       }
-      throw new UnauthorizedException('Email ou mot de passe incorrect');
+      throw new UnauthorizedException('Incorrect email or password');
     }
 
     await this.accountLockoutService.resetAttempts(email);
@@ -60,7 +60,7 @@ export class AuthService {
 
     const existingUser = await this.usersService.findByEmail(email);
     if (existingUser) {
-      throw new BadRequestException('Cet email est déjà utilisé');
+      throw new BadRequestException('This email is already in use');
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -80,7 +80,7 @@ export class AuthService {
     await this.mailService.sendActivationEmail(email, activationToken);
 
     return {
-      message: "Un email d'activation a été envoyé à votre adresse email",
+      message: 'An activation email has been sent to your email address',
     };
   }
 
@@ -123,7 +123,7 @@ export class AuthService {
     const user = await this.usersService.findByResetPasswordToken(token);
     if (!user || user.resetPasswordTokenExpires < new Date()) {
       throw new UnauthorizedException(
-        'Le token est invalide ou a expiré. Veuillez réessayer.',
+        'The token is invalid or has expired. Please try again.',
       );
     }
 
@@ -138,7 +138,7 @@ export class AuthService {
   async verifyEmail(token: string) {
     const user = await this.usersService.findByActivationToken(token);
     if (!user || user.activationTokenExpires < new Date()) {
-      throw new UnauthorizedException('Token invalide ou expiré');
+      throw new UnauthorizedException('Invalid or expired token');
     }
 
     await this.usersService.update(user.id, {
@@ -152,11 +152,11 @@ export class AuthService {
     const user = await this.usersService.findByActivationToken(token);
 
     if (!user) {
-      throw new BadRequestException("Token d'activation invalide");
+      throw new BadRequestException('Invalid activation token');
     }
 
     if (user.activationTokenExpires < new Date()) {
-      throw new BadRequestException("Le token d'activation a expiré");
+      throw new BadRequestException('The activation token has expired');
     }
 
     await this.usersService.update(user.id, {
@@ -165,7 +165,7 @@ export class AuthService {
       activationTokenExpires: null,
     });
 
-    return { message: 'Compte activé avec succès' };
+    return { message: 'Account successfully activated' };
   }
 
   async resendActivationEmail(email: string) {
@@ -173,12 +173,12 @@ export class AuthService {
     if (!user) {
       return {
         message:
-          "Si votre compte existe, un nouvel email d'activation vous sera envoyé.",
+          'If your account exists, a new activation email will be sent to you.',
       };
     }
 
     if (user.isEmailVerified) {
-      throw new BadRequestException('Votre compte est déjà activé.');
+      throw new BadRequestException('Your account is already activated.');
     }
 
     const activationToken = randomBytes(32).toString('hex');
@@ -194,7 +194,7 @@ export class AuthService {
 
     return {
       message:
-        "Si votre compte existe, un nouvel email d'activation vous sera envoyé.",
+        'If your account exists, a new activation email will be sent to you.',
     };
   }
 
