@@ -13,6 +13,7 @@ async function bootstrap() {
   });
 
   const originArray = process.env.CLIENT_URL?.split(',') || [
+    'http://localhost:5173',
     'http://localhost:3000',
   ];
 

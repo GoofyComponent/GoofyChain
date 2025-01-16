@@ -16,7 +16,6 @@ import {
 } from "./ui/form";
 import { Link, useNavigate } from "@tanstack/react-router";
 import useAuth from "@/hooks/useAuth";
-import clsx from "clsx";
 import HyperText from "./ui/hyper-text";
 
 import logo from "@/assets/img/logo.png";
@@ -58,11 +57,11 @@ export function SignupForm({
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      email: "",
-      firstName: "",
-      lastName: "",
-      password: "",
-      passwordConfirm: "",
+      email: "abc@abc.com",
+      firstName: "abc@abc.com",
+      lastName: "abc@abc.com",
+      password: "g!oeasz6D#kPkzjK",
+      passwordConfirm: "g!oeasz6D#kPkzjK",
     },
   });
 
@@ -107,6 +106,8 @@ export function SignupForm({
       const jwt = response.accessToken;
 
       await login(user, jwt);
+      await new Promise((resolve) => setTimeout(resolve, 100));
+
       return navigate({
         to: "/dashboard",
       });

@@ -1,3 +1,4 @@
+import { Toaster } from "@/components/ui/toaster";
 import { AuthState } from "@/hooks/hooksTypes";
 import { createRootRouteWithContext, Outlet } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
@@ -22,6 +23,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
   component: () => (
     <>
       <Outlet />
+      <Toaster />
       <Suspense>
         <TanStackRouterDevtools />
       </Suspense>
