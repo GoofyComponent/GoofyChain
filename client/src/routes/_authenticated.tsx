@@ -1,4 +1,5 @@
-import { createFileRoute, Outlet, redirect } from "@tanstack/react-router";
+import { DashboardLayout } from "@/pages/DashboardLayout";
+import { createFileRoute, redirect } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/_authenticated")({
   beforeLoad: ({ context, location }) => {
@@ -15,5 +16,5 @@ export const Route = createFileRoute("/_authenticated")({
 });
 
 function RouteComponent() {
-  return <Outlet />;
+  return <DashboardLayout />;
 }

@@ -93,6 +93,10 @@ export class AuthService {
         email: user.email,
         firstName: user.firstName,
         lastName: user.lastName,
+        // wallets: string[];
+        initialWalletId: user.initialWalletId,
+        preferedCurrency: user.preferedCurrency,
+        isOnboarded: user.isOnboarded,
       },
     };
   }

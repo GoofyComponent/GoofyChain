@@ -38,7 +38,7 @@ const formSchema = z.object({
 const API_URL = import.meta.env.VITE_API_URL;
 
 export const PreferedCurrencyPage = () => {
-  const { accessToken, logout } = useAuth();
+  const { accessToken, logout, update } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -86,6 +86,8 @@ export const PreferedCurrencyPage = () => {
 
       return;
     }
+
+    await update({preferedCurrency: values.currency, initialWalletId: location?.state?.onboardings?.walletKey, isOnboarded: true});
 
     navigate({
       to: "/dashboard",
