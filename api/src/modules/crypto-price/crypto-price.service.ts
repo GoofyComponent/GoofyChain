@@ -22,12 +22,12 @@ export class CryptoPriceService {
       this.maxRequestsPerSecond = 5; // Limites plus restrictives en mode non authentifié
       this.maxRequestsPerMinute = 50;
       console.log(
-        'CryptoCompare API: Mode non authentifié (limites restreintes)',
+        'CryptoCompare API: Unauthenticated Mode (Restricted Limits)',
       );
     } else {
       this.maxRequestsPerSecond = 15;
       this.maxRequestsPerMinute = 250;
-      console.log('CryptoCompare API: Mode authentifié (limites étendues)');
+      console.log('CryptoCompare API: Authenticated Mode (Extended Limits)');
     }
   }
 
@@ -106,7 +106,7 @@ export class CryptoPriceService {
     const dayKey = this.getDayTimestamp(timestamp);
 
     console.error(
-      `\x1b[34m Récupération du prix ETH/${currency} pour le ${date.toLocaleString()}\x1b[0m`,
+      `\x1b[34m Retrieving ETH/${currency} price for ${date.toLocaleString()}\x1b[0m`,
     );
     // console.log(
     // ` Utilisation API: ${this.secondWindow.length}/${this.maxRequestsPerSecond} req/sec, ${this.minuteWindow.length}/${this.maxRequestsPerMinute} req/min`,

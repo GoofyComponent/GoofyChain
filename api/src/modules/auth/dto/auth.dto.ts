@@ -28,7 +28,7 @@ export class RegisterDto {
   @MinLength(6)
   @Validate(StrongPasswordValidator, {
     message:
-      'Le mot de passe doit contenir au moins une majuscule, une minuscule, un chiffre et un caractère spécial',
+      'Password must contain at least one uppercase letter, one lowercase letter, one number and one special character',
   })
   password: string;
 

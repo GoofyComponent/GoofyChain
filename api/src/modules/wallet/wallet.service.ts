@@ -37,11 +37,9 @@ export class WalletService {
           balance: this.web3.utils.fromWei(response.data.result, 'ether'),
         };
       }
-      throw new Error('Erreur lors de la récupération du solde');
+      throw new Error('Error retrieving balance');
     } catch (error) {
-      throw new Error(
-        `Erreur lors de la récupération du solde: ${error.message}`,
-      );
+      throw new Error(`Error retrieving balance: ${error.message}`);
     }
   }
 
@@ -50,8 +48,8 @@ export class WalletService {
     startBlock = 0,
     endBlock = 99999999,
   ): Promise<any[]> {
-    // console.log(`Début de la récupération des transactions pour ${address}`);
-    // console.log(`Block de départ: ${startBlock}, Block de fin: ${endBlock}`);
+    // console.log(`Starting to retrieve transactions for ${address}`);
+    // console.log(`Start block: ${startBlock}, End block: ${endBlock}`);
 
     let allTransactions: any[] = [];
     let currentStartBlock = startBlock;
@@ -61,7 +59,7 @@ export class WalletService {
     while (hasMoreTransactions) {
       try {
         // console.log(
-        // `\nRécupération du lot #${batchNumber} depuis le block ${currentStartBlock}`,
+        // `\nRetrieving batch #${batchNumber} from block ${currentStartBlock}`,
         // );
 
         const response = await axios.get(this.etherscanApiUrl, {
@@ -83,37 +81,34 @@ export class WalletService {
           allTransactions = [...allTransactions, ...transactions];
 
           // console.log(
-          // `${transactions.length} nouvelles transactions récupérées`,
+          // `${transactions.length} new transactions retrieved`,
           // );
-          // console.log(`Total actuel: ${allTransactions.length} transactions`);
+          // console.log(`Current total: ${allTransactions.length} transactions`);
 
           if (transactions.length === 10000) {
             currentStartBlock =
               parseInt(transactions[transactions.length - 1].blockNumber) + 1;
-            // console.log(`Passage au block suivant: ${currentStartBlock}`);
+            // console.log(`Moving to next block: ${currentStartBlock}`);
             batchNumber++;
           } else {
-            // console.log('Plus de transactions à récupérer');
+            // console.log('No more transactions to retrieve');
             hasMoreTransactions = false;
           }
         } else {
-          // console.log('Aucune transaction trouvée dans ce lot');
+          // console.log('No transactions found in this batch');
           hasMoreTransactions = false;
         }
 
-        // console.log('Pause de 200ms...');
+        // console.log('Pausing for 200ms...');
         await new Promise((resolve) => setTimeout(resolve, 200));
       } catch (error) {
-        console.error(
-          'Erreur lors de la récupération des transactions:',
-          error,
-        );
+        console.error('Error retrieving transactions:', error);
         throw error;
       }
     }
 
     // console.log(
-    // `\nRécupération terminée! Total: ${allTransactions.length} transactions`,
+    // `\nRetrieval complete! Total: ${allTransactions.length} transactions`,
     // );
     return allTransactions;
   }

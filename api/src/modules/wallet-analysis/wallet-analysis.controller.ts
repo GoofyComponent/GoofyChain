@@ -30,10 +30,10 @@ export class WalletAnalysisController {
 
   @Post('analyze')
   @Version('1')
-  @ApiOperation({ summary: 'Analyser un wallet Ethereum' })
+  @ApiOperation({ summary: 'Analyze an Ethereum wallet' })
   @ApiResponse({
     status: 201,
-    description: 'Analyse du wallet effectuée avec succès',
+    description: 'Wallet analysis successfully performed',
   })
   async analyzeWallet(
     @Body('walletAddress') walletAddress: string,
@@ -43,10 +43,10 @@ export class WalletAnalysisController {
 
   @Get('analysis')
   @Version('1')
-  @ApiOperation({ summary: 'Récupérer une analyse par plage de dates' })
+  @ApiOperation({ summary: 'Retrieve analysis by date range' })
   @ApiResponse({
     status: 200,
-    description: 'Analyse trouvée avec succès',
+    description: 'Analysis successfully found',
   })
   async getAnalysisByDateRange(
     @Query('walletAddress') walletAddress: string,
@@ -56,10 +56,10 @@ export class WalletAnalysisController {
 
   @Get('transactions')
   @Version('1')
-  @ApiOperation({ summary: 'Récupérer les points de transaction' })
+  @ApiOperation({ summary: 'Collect transaction points' })
   @ApiResponse({
     status: 200,
-    description: 'Points de transaction récupérés avec succès',
+    description: 'Transaction points successfully retrieved',
   })
   async getTransactionPoints(
     @Query('analysisId') analysisId: string,
@@ -69,10 +69,10 @@ export class WalletAnalysisController {
 
   // @UseGuards(JwtAuthGuard)
   @Get('portfolio-history')
-  @ApiOperation({ summary: "Obtenir l'historique de la valeur du portfolio" })
+  @ApiOperation({ summary: 'Get Portfolio Value History' })
   @ApiResponse({
     status: 200,
-    description: 'Historique récupéré avec succès',
+    description: 'History successfully retrieved',
   })
   async getPortfolioHistory(
     @Query('walletAddress') walletAddress: string,
@@ -100,10 +100,10 @@ export class WalletAnalysisController {
   }
 
   @Get('portfolio-stats')
-  @ApiOperation({ summary: 'Obtenir les statistiques du portfolio' })
+  @ApiOperation({ summary: 'Get Portfolio Statistics' })
   @ApiResponse({
     status: 200,
-    description: 'Statistiques récupérées avec succès',
+    description: 'Statistics successfully retrieved',
   })
   async getPortfolioStats(
     @Query('walletAddress') walletAddress: string,
@@ -114,10 +114,10 @@ export class WalletAnalysisController {
   }
 
   @Get('transactions-summary')
-  @ApiOperation({ summary: 'Obtenir un résumé des transactions' })
+  @ApiOperation({ summary: 'Get a summary of transactions' })
   @ApiResponse({
     status: 200,
-    description: 'Résumé récupéré avec succès',
+    description: 'Summary successfully retrieved',
   })
   async getTransactionsSummary(
     @Query('walletAddress') walletAddress: string,

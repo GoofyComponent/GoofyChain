@@ -21,7 +21,7 @@ import { Link } from "@tanstack/react-router";
 import logo from "@/assets/img/logo.png";
 
 export const Index = () => {
-  const texts = ["« Un seul mot »", "« Ethereum »"];
+  const texts = ["« One word »", "« Ethereum »"];
   return (
     <div className="overflow-hidden h-screen w-screen">
       <Helmet>
