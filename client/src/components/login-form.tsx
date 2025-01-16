@@ -146,12 +146,16 @@ export function LoginForm({
               />
               <Button
                 type="submit"
-                className={clsx("w-full", {
-                  "animate-spin": form.formState.isSubmitting,
-                })}
+                className="w-full"
                 disabled={form.formState.isSubmitting}
               >
-                {form.formState.isSubmitting ? <LoaderCircle /> : "Login"}
+                {form.formState.isSubmitting ? (
+                  <div className="flex justify-center items-center">
+                    <LoaderCircle className="animate-spin" />
+                  </div>
+                ) : (
+                  "Login"
+                )}
               </Button>
             </div>
           </div>
