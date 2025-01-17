@@ -1,10 +1,13 @@
 import {
   Body,
+  ClassSerializerInterceptor,
   Controller,
   Get,
+  Param,
   Post,
   Query,
   Req,
+  UseInterceptors,
   Version,
 } from '@nestjs/common';
 import { ApiOperation, ApiResponse, ApiTags } from '@nestjs/swagger';
@@ -22,6 +25,7 @@ import { WalletAnalysisService } from './wallet-analysis.service';
   version: '1',
 })
 @ApiTags('Analyse de Wallet')
+@UseInterceptors(ClassSerializerInterceptor)
 export class WalletAnalysisController {
   constructor(
     private readonly walletAnalysisService: WalletAnalysisService,
@@ -127,5 +131,38 @@ export class WalletAnalysisController {
     return this.walletAnalysisService.getTransactionsSummary(
       analysis.transactions,
     );
+  }
+
+  @Get(':address')
+  // @UseGuards(JwtAuthGuard)
+  async analyzeWalletByAddress(
+    @Param('address') address: string,
+    @Query('currency') currency: string = 'EUR',
+  ) {
+    return this.walletAnalysisService.analyzeWallet(address, currency);
+  }
+
+  @Get(':address/history')
+  // @UseGuards(JwtAuthGuard)
+  async getPortfolioHistoryByAddress(
+    @Param('address') address: string,
+    @Query('currency') currency: string = 'EUR',
+  ) {
+    const analysis = await this.walletAnalysisService.analyzeWallet(
+      address,
+      currency,
+    );
+    return this.walletAnalysisService.getPortfolioHistory(
+      analysis.transactions,
+      currency,
+    );
+  }
+
+  @Get(':address/stats')
+  // @UseGuards(JwtAuthGuard)
+  async getPortfolioStatsByAddress(@Param('address') address: string) {
+    const analysis =
+      await this.walletAnalysisService.getAnalysisByDateRange(address);
+    return this.walletAnalysisService.getPortfolioStats(analysis.transactions);
   }
 }

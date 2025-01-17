@@ -1,3 +1,4 @@
+import { Exclude } from 'class-transformer';
 import {
   Column,
   CreateDateColumn,
@@ -30,16 +31,19 @@ export class WalletTransaction {
   blockNumber: number;
 
   @Column('decimal', { precision: 36, scale: 18 })
-  value: number;
+  value: number; // Valeur en ETH
 
-  @Column('decimal', { precision: 36, scale: 18 })
+  @Column('numeric', { precision: 78, scale: 0 })
+  brutValue: string; // Valeur brute en Wei (stockée comme string car trop grand pour number)
+
+  @Column('numeric', { precision: 78, scale: 0 })
+  gasPrice: string; // Prix du gas en Wei
+
+  @Column('int')
   gasUsed: number;
 
   @Column('decimal', { precision: 36, scale: 18 })
-  gasPrice: number;
-
-  @Column('decimal', { precision: 36, scale: 18 })
-  netValue: number; // Valeur après soustraction des frais
+  netValue: number; // Valeur nette en ETH (après soustraction des frais)
 
   @Column('decimal', { precision: 36, scale: 18 })
   ethPrice: number; // Prix de l'ETH au moment de la transaction
@@ -57,12 +61,19 @@ export class WalletTransaction {
   isIncoming: boolean;
 
   @Column('decimal', { precision: 36, scale: 18 })
-  balance: number; // Solde du wallet après cette transaction
+  balance: number; // Solde en ETH après la transaction
 
   @Column('decimal', { precision: 36, scale: 18 })
-  previousBalance: number; // Solde du wallet avant cette transaction
+  previousBalance: number; // Solde en ETH avant la transaction
+
+  @Column('numeric', { precision: 78, scale: 0 })
+  balanceWei: string; // Solde en Wei après la transaction
+
+  @Column('numeric', { precision: 78, scale: 0 })
+  previousBalanceWei: string; // Solde en Wei avant la transaction
 
   @ManyToOne(() => WalletAnalysis, (analysis) => analysis.transactions)
+  @Exclude()
   analysis: WalletAnalysis;
 
   @CreateDateColumn()

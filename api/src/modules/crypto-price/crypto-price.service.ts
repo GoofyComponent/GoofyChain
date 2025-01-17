@@ -108,10 +108,10 @@ export class CryptoPriceService {
     console.error(
       `\x1b[34m Retrieving ETH/${currency} price for ${date.toLocaleString()}\x1b[0m`,
     );
-    // console.log(
-    // ` Utilisation API: ${this.secondWindow.length}/${this.maxRequestsPerSecond} req/sec, ${this.minuteWindow.length}/${this.maxRequestsPerMinute} req/min`,
-    // );
-    // console.log(` Clé de cache pour la journée: ${dayKey}`);
+    console.log(
+      ` Utilisation API: ${this.secondWindow.length}/${this.maxRequestsPerSecond} req/sec, ${this.minuteWindow.length}/${this.maxRequestsPerMinute} req/min`,
+    );
+    console.log(` Clé de cache pour la journée: ${dayKey}`);
 
     const cachedPrice = this.requestQueue.get(dayKey);
     if (cachedPrice) {
@@ -143,6 +143,8 @@ export class CryptoPriceService {
               toTs: dayTimestamp,
             },
           });
+
+          // console.log(response.data.Data.Data[0]);
 
           if (response.data.Response === 'Error') {
             if (response.data.Message.includes('rate limit')) {

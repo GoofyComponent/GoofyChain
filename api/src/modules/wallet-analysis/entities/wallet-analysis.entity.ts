@@ -7,6 +7,7 @@ import {
   PrimaryGeneratedColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Exclude } from 'class-transformer';
 import { User } from '../../users/entities/user.entity';
 import { WalletTransaction } from './wallet-transaction.entity';
 
@@ -48,9 +49,11 @@ export class WalletAnalysis {
   totalTransactions: number;
 
   @ManyToOne(() => User)
+  @Exclude()
   user: User;
 
   @OneToMany(() => WalletTransaction, (transaction) => transaction.analysis)
+  @Exclude()
   transactions: WalletTransaction[];
 
   @CreateDateColumn()

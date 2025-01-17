@@ -44,8 +44,9 @@ export class WalletAnalysisService {
 
     while (hasMoreTransactions) {
       try {
-        const response = await axios.get('https://api.etherscan.io/api', {
+        const response = await axios.get(this.etherscanApiUrl, {
           params: {
+            chainId: '1',
             module: 'account',
             action: 'txlistinternal',
             address,
@@ -206,7 +207,7 @@ export class WalletAnalysisService {
     // Récupérer l'historique des transactions via l'API Etherscan
     // console.log('Récupération des transactions...');
     const transactions = await this.getTransactionList(walletAddress);
-    // console.log(`${transactions.length} transactions récupérées`);
+    console.log(`${transactions.length} transactions récupérées`);
 
     let currentBalance = 0;
     const totals = await transactions.reduce(
@@ -296,77 +297,99 @@ export class WalletAnalysisService {
 
     await this.walletAnalysisRepository.save(analysis);
 
-    const savedTransactions = await Promise.all(
-      transactions.map(async (tx) => {
-        // Vérifier si la transaction existe déjà
-        let transaction = await this.walletTransactionRepository.findOne({
-          where: {
-            hash: tx.hash,
-            walletAddress: walletAddress.toLowerCase(),
-          },
-        });
+    // séquentielle
+    const savedTransactions = [];
+    for (let index = 0; index < transactions.length; index++) {
+      const tx = transactions[index];
 
-        if (transaction) {
-          transaction.analysis = analysis;
-          transaction.blockNumber = parseInt(tx.blockNumber || '0');
-          transaction.timestamp = new Date(
-            parseInt(tx.timeStamp || '0') * 1000,
-          );
-          transaction.from = tx.from || '';
-          transaction.to = tx.to || '';
-          transaction.value = tx.value
-            ? parseFloat(ethers.formatEther(tx.value))
-            : 0;
-          transaction.gasPrice = tx.gasPrice
-            ? parseFloat(ethers.formatEther(tx.gasPrice))
-            : 0;
-          transaction.gasUsed = tx.gasUsed ? parseInt(tx.gasUsed) : 0;
-        } else {
-          transaction = new WalletTransaction();
-          transaction.analysis = analysis;
-          transaction.hash = tx.hash;
-          transaction.walletAddress = walletAddress.toLowerCase();
-          transaction.blockNumber = parseInt(tx.blockNumber || '0');
-          transaction.timestamp = new Date(
-            parseInt(tx.timeStamp || '0') * 1000,
-          );
-          transaction.from = tx.from || '';
-          transaction.to = tx.to || '';
-          transaction.value = tx.value
-            ? parseFloat(ethers.formatEther(tx.value))
-            : 0;
-          transaction.gasPrice = tx.gasPrice
-            ? parseFloat(ethers.formatEther(tx.gasPrice))
-            : 0;
-          transaction.gasUsed = tx.gasUsed ? parseInt(tx.gasUsed) : 0;
-        }
+      // Vérifier si la transaction existe déjà
+      let transaction = await this.walletTransactionRepository.findOne({
+        where: {
+          hash: tx.hash,
+          walletAddress: walletAddress.toLowerCase(),
+        },
+      });
 
-        // Récupérer le taux de change historique pour la date de la transaction
-        const ethPrice = await this.cryptoPriceService.getHistoricalPrice(
-          Math.floor(transaction.timestamp.getTime() / 1000),
-          currency,
+      if (transaction) {
+        transaction.analysis = analysis;
+        transaction.blockNumber = parseInt(tx.blockNumber || '0');
+        transaction.timestamp = new Date(parseInt(tx.timeStamp || '0') * 1000);
+        transaction.from = tx.from || '';
+        transaction.to = tx.to || '';
+        transaction.brutValue = tx.value || '0';
+        transaction.value = parseFloat(ethers.formatEther(tx.value || '0'));
+        transaction.gasPrice = tx.gasPrice || '0';
+        transaction.gasUsed = tx.gasUsed ? parseInt(tx.gasUsed) : 0;
+      } else {
+        transaction = new WalletTransaction();
+        transaction.analysis = analysis;
+        transaction.hash = tx.hash;
+        transaction.walletAddress = walletAddress.toLowerCase();
+        transaction.blockNumber = parseInt(tx.blockNumber || '0');
+        transaction.timestamp = new Date(parseInt(tx.timeStamp || '0') * 1000);
+        transaction.from = tx.from || '';
+        transaction.to = tx.to || '';
+        transaction.brutValue = tx.value || '0';
+        transaction.value = parseFloat(ethers.formatEther(tx.value || '0'));
+        transaction.gasPrice = tx.gasPrice || '0';
+        transaction.gasUsed = tx.gasUsed ? parseInt(tx.gasUsed) : 0;
+      }
+
+      // Récupérer le taux de change historique pour la date de la transaction
+      const ethPrice = await this.cryptoPriceService.getHistoricalPrice(
+        Math.floor(transaction.timestamp.getTime() / 1000),
+        currency,
+      );
+
+      transaction.ethPrice = ethPrice;
+      transaction.valueInCurrency = transaction.value * ethPrice;
+      transaction.currency = currency;
+
+      // Calculer la valeur nette (après frais de gas) en Wei
+      const gasCostWei =
+        BigInt(transaction.gasPrice) * BigInt(transaction.gasUsed);
+      transaction.isIncoming =
+        tx.to?.toLowerCase() === walletAddress.toLowerCase();
+
+      // Calculer les balances en Wei
+      const previousBalanceWei =
+        index === 0
+          ? BigInt(0)
+          : BigInt(savedTransactions[index - 1].balanceWei);
+      transaction.previousBalanceWei = previousBalanceWei.toString();
+      transaction.previousBalance = parseFloat(
+        ethers.formatEther(previousBalanceWei.toString()),
+      );
+
+      if (transaction.isIncoming) {
+        const newBalanceWei =
+          previousBalanceWei + BigInt(transaction.brutValue);
+        transaction.balanceWei = newBalanceWei.toString();
+        transaction.balance = parseFloat(
+          ethers.formatEther(newBalanceWei.toString()),
         );
+        transaction.netValue = transaction.value;
+      } else {
+        const totalCostWei = BigInt(transaction.brutValue) + gasCostWei;
+        const newBalanceWei = previousBalanceWei - totalCostWei;
+        transaction.balanceWei = newBalanceWei.toString();
+        transaction.balance = parseFloat(
+          ethers.formatEther(newBalanceWei.toString()),
+        );
+        transaction.netValue = -parseFloat(
+          ethers.formatEther(totalCostWei.toString()),
+        );
+      }
 
-        transaction.ethPrice = ethPrice;
-        transaction.valueInCurrency = transaction.value * ethPrice;
-        transaction.currency = currency;
+      // Valeurs finales en ETH pour l'affichage
+      transaction.value = Number(transaction.value);
+      transaction.ethPrice = Number(ethPrice);
+      transaction.valueInCurrency = Number(transaction.value * ethPrice);
 
-        // Calculer la valeur nette (après frais de gas)
-        const gasCost = transaction.gasPrice * transaction.gasUsed;
-        transaction.isIncoming =
-          tx.to?.toLowerCase() === walletAddress.toLowerCase();
-        transaction.netValue = transaction.isIncoming
-          ? transaction.value
-          : -(transaction.value + gasCost);
-
-        // Mettre à jour les balances
-        transaction.previousBalance = currentBalance;
-        currentBalance += transaction.netValue;
-        transaction.balance = currentBalance;
-
-        return this.walletTransactionRepository.save(transaction);
-      }),
-    );
+      const savedTransaction =
+        await this.walletTransactionRepository.save(transaction);
+      savedTransactions.push(savedTransaction);
+    }
 
     analysis.transactions = savedTransactions;
     return analysis;
@@ -397,7 +420,7 @@ export class WalletAnalysisService {
       timestamp: tx.timestamp,
       balance: tx.netValue,
       ethPrice: tx.ethPrice,
-      gasUsed: parseFloat(tx.gasUsed.toString()),
+      gasUsed: tx.gasUsed,
       value: tx.value,
     }));
   }
