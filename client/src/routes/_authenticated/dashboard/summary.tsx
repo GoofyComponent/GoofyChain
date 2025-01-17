@@ -33,9 +33,11 @@ export const Route = createFileRoute("/_authenticated/dashboard/summary")({
     if (!walletAddress || !currency) {
       throw new Error("No wallet address or currency found");
     }
+    
+    const upperCaseCurrency = currency.toUpperCase()
 
     const transactions = await fetch(
-      `${API_URL}/wallet-analysis/transactions-summary?walletAddress=${walletAddress}&currency=${currency}`
+      `${API_URL}/wallet-analysis/transactions-summary?walletAddress=${walletAddress}&currency=${upperCaseCurrency}`
     );
     const transactionsData = await transactions.json();
 
@@ -45,7 +47,7 @@ export const Route = createFileRoute("/_authenticated/dashboard/summary")({
     const endDate = new Date().toISOString();
 
     const chart = await fetch(
-      `${API_URL}/wallet-analysis/portfolio-history?walletAddress=${walletAddress}&currency=${currency}&startDate=${startDate}&endDate=${endDate}`
+      `${API_URL}/wallet-analysis/portfolio-history?walletAddress=${walletAddress}&currency=${upperCaseCurrency}&startDate=${startDate}&endDate=${endDate}`
     );
     const chartData = await chart.json();
 
